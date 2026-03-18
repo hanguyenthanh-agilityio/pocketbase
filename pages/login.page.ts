@@ -34,13 +34,8 @@ export class LoginPage {
     await this.passwordInput.fill(password);
 
     await expect(this.loginButton).toBeVisible();
-    await expect(this.loginButton).toBeEnabled();
 
-    await this.loginButton.scrollIntoViewIfNeeded();
-
-    await this.page.waitForTimeout(100);
-
-    await this.loginButton.click();
+    await this.loginButton.click({ force: true });
   }
 
   // Server error

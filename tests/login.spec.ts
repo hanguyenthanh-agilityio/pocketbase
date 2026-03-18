@@ -71,6 +71,11 @@ test.describe("PocketBase Login", () => {
       email: "wrong@example.com",
       password: validPassword,
     },
+    {
+      title: "invalid email and password",
+      email: "wrong@example.com",
+      password: "wrong123",
+    },
   ];
 
   negativeCases.forEach((data, index) => {

@@ -50,6 +50,18 @@ test.describe("PocketBase Login", () => {
       password: "",
     },
     {
+      title: "email missing @",
+      email: "31231231",
+      password: validPassword,
+      type: "html5",
+    },
+    {
+      title: "email invalid format",
+      email: "test@",
+      password: validPassword,
+      type: "html5",
+    },
+    {
       title: "invalid password",
       email: validEmail,
       password: "wrong123",
@@ -82,6 +94,8 @@ test.describe("PocketBase Login", () => {
           if (isEmptyPassword) {
             await login.expectPasswordRequired();
           }
+        } else if (data.type === "html5") {
+          await login.expectEmailInvalidFormat();
         } else {
           await login.expectInvalidCredentialsError();
         }

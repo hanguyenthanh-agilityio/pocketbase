@@ -36,6 +36,10 @@ export class LoginPage {
     await expect(this.loginButton).toBeVisible();
     await expect(this.loginButton).toBeEnabled();
 
+    await this.loginButton.scrollIntoViewIfNeeded();
+
+    await this.page.waitForTimeout(100);
+
     await this.loginButton.click();
   }
 
@@ -61,5 +65,11 @@ export class LoginPage {
 
   async expectStillOnLogin() {
     await expect(this.loginTitle).toBeVisible();
+  }
+
+  async expectEmailInvalidFormat() {
+    const isValid = await this.emailInput.evaluate((el: HTMLInputElement) => el.checkValidity());
+
+    expect(isValid).toBeFalsy();
   }
 }

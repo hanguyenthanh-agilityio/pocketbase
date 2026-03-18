@@ -8,9 +8,10 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
+    "test:ci": "playwright test --reporter=html",
     "test:report": "playwright show-report",
     "build:report": "mkdir -p public/playwright-report && cpx \"playwright-report/**/*\" public/playwright-report",
-    "build": "npm run test && npm run build:report",
+    "build": "npm run build:report",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

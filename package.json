@@ -5,15 +5,16 @@
   "description": "",
   "scripts": {
     "prepare": "husky install",
-    "build": "echo 'Static report deployment'",
     "test": "playwright test",
-    "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "report:build": "rimraf public && mkdir public && cpx \"playwright-report/**/*\" public/playwright-report",
+    "build:report": "mkdir -p public/playwright-report && cpx \"playwright-report/**/*\" public/playwright-report",
+    "build": "npm run test && npm run build:report",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
+  
   "lint-staged": {
     "*.{ts,js}": [
       "eslint --fix",

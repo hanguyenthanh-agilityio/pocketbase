@@ -9,4 +9,5 @@ node_modules/
 
 .env
 
-public/playwright-report/
+public/playwright-report/*
+!public/playwright-report/.gitkeep

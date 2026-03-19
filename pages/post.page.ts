@@ -4,39 +4,46 @@ export class PostPage {
   readonly page: Page;
   readonly frame: FrameLocator;
 
-  // navigation
+  // Navigation
   readonly postsMenu: Locator;
 
-  // actions
+  // Actions
   readonly newBtn: Locator;
   readonly createBtn: Locator;
   readonly cancelBtn: Locator;
   readonly closeModalBtn: Locator;
 
-  // fields
+  // Fields
   readonly titleInput: Locator;
-  readonly descriptionInput: Locator;
-  readonly activeToggle: Locator;
+  readonly activeInput: Locator;
+  readonly selectDropdown: Locator;
+
+  // Rich text iframe
+  readonly descriptionFrame: FrameLocator;
+  readonly descriptionEditor: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
-    // iframe
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
-    // sidebar
     this.postsMenu = this.frame.getByText("Posts");
 
-    // buttons
     this.newBtn = this.frame.getByRole("button", { name: /New record/ });
     this.createBtn = this.frame.getByRole("button", { name: /Create/ });
     this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/ });
     this.closeModalBtn = this.frame.getByRole("button", { name: /Close/ });
 
-    // fields
     this.titleInput = this.frame.getByLabel(/title/i);
-    this.descriptionInput = this.frame.getByLabel(/description/i);
-    this.activeToggle = this.frame.getByLabel(/active/i);
+
+    // Input hidden
+    this.activeInput = this.frame.getByLabel(/active/i);
+
+    this.selectDropdown = this.frame.getByRole("button", { name: /select/i });
+
+    // Rich text editor
+    this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
+    this.descriptionEditor = this.descriptionFrame.locator("body");
   }
 
   async goto() {
@@ -44,29 +51,63 @@ export class PostPage {
     await this.page.waitForSelector('iframe[title="Demo dashboard"]');
 
     await this.postsMenu.click();
-
-    // ensure page ready
     await expect(this.newBtn).toBeVisible();
   }
 
   async clickNew() {
     await this.newBtn.click();
-
-    // Wait modal render
     await expect(this.titleInput).toBeVisible({ timeout: 10000 });
   }
 
+  // Scroll
+  async scrollForm() {
+    const form = this.frame.locator("form.tab-item.active");
+
+    await form.waitFor({ state: "visible" });
+    await form.scrollIntoViewIfNeeded();
+  }
+
   async fillTitle(title: string) {
+    await this.titleInput.scrollIntoViewIfNeeded();
     await this.titleInput.fill(title);
   }
 
   async fillDescription(desc: string) {
-    await this.descriptionInput.fill(desc);
+    const editor = this.descriptionEditor;
+
+    await editor.scrollIntoViewIfNeeded();
+    await editor.waitFor({ state: "visible" });
+
+    await editor.click();
+
+    try {
+      await editor.fill(desc);
+    } catch {
+      await editor.type(desc);
+    }
   }
 
   async toggleActive(active: boolean) {
-    const checked = await this.activeToggle.isChecked();
-    if (checked !== active) await this.activeToggle.click();
+    const label = this.frame.locator("label", { hasText: /active/i });
+
+    await label.scrollIntoViewIfNeeded();
+    await label.waitFor({ state: "visible" });
+
+    const checked = await this.activeInput.isChecked();
+
+    if (checked !== active) {
+      await label.click();
+    }
+  }
+
+  async selectOption() {
+    await this.selectDropdown.scrollIntoViewIfNeeded();
+    await this.selectDropdown.click();
+
+    const option = this.frame.getByRole("menuitem").first();
+
+    await option.waitFor({ state: "visible" });
+    await option.click();
   }
 
   async clickCreate() {

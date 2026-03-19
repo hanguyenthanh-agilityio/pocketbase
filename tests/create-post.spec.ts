@@ -12,10 +12,22 @@ test.describe("Create A New Post", () => {
     await postPage.goto();
   });
 
+  // Cancel
   test("Cancel creating post", async () => {
+    const title = `Cancel ${Date.now()}`;
+
     await postPage.clickNew();
-    await postPage.fillTitle("Cancel Test");
+    await postPage.fillTitle(title);
     await postPage.clickCancel();
-    await expect(postPage.getPostRow("Cancel Test")).toHaveCount(0);
+
+    await expect(postPage.getPostRow(title)).toHaveCount(0);
+  });
+
+  // Close modal
+  test("Close modal using X button", async () => {
+    await postPage.clickNew();
+    await postPage.clickCloseModal();
+
+    await expect(postPage.titleInput).toHaveCount(0);
   });
 });

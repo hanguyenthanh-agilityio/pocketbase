@@ -1,34 +1,59 @@
-import { Page, Locator } from "@playwright/test";
+import { Page, Locator, FrameLocator, expect } from "@playwright/test";
 
 export class PostPage {
   readonly page: Page;
+  readonly frame: FrameLocator;
+
+  // navigation
+  readonly postsMenu: Locator;
+
+  // actions
   readonly newBtn: Locator;
-  readonly titleInput: Locator;
-  readonly descriptionInput: Locator;
-  readonly activeToggle: Locator;
-  readonly optionsDropdown: Locator;
   readonly createBtn: Locator;
   readonly cancelBtn: Locator;
   readonly closeModalBtn: Locator;
 
+  // fields
+  readonly titleInput: Locator;
+  readonly descriptionInput: Locator;
+  readonly activeToggle: Locator;
+
   constructor(page: Page) {
     this.page = page;
-    this.newBtn = page.locator('button:has-text("New record")');
-    this.titleInput = page.locator('input[name="title"]');
-    this.descriptionInput = page.locator('textarea[name="description"]');
-    this.activeToggle = page.locator('input[name="active"]');
-    this.optionsDropdown = page.locator('select[name="options"]');
-    this.createBtn = page.locator('button:has-text("Create")');
-    this.cancelBtn = page.locator('button:has-text("Cancel")');
-    this.closeModalBtn = page.locator("button.close-modal");
+
+    // iframe
+    this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
+
+    // sidebar
+    this.postsMenu = this.frame.getByText("Posts");
+
+    // buttons
+    this.newBtn = this.frame.getByRole("button", { name: /New record/ });
+    this.createBtn = this.frame.getByRole("button", { name: /Create/ });
+    this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/ });
+    this.closeModalBtn = this.frame.getByRole("button", { name: /Close/ });
+
+    // fields
+    this.titleInput = this.frame.getByLabel(/title/i);
+    this.descriptionInput = this.frame.getByLabel(/description/i);
+    this.activeToggle = this.frame.getByLabel(/active/i);
   }
 
   async goto() {
-    await this.page.goto("/admin/collections/posts");
+    await this.page.goto("/demo/");
+    await this.page.waitForSelector('iframe[title="Demo dashboard"]');
+
+    await this.postsMenu.click();
+
+    // ensure page ready
+    await expect(this.newBtn).toBeVisible();
   }
 
   async clickNew() {
     await this.newBtn.click();
+
+    // Wait modal render
+    await expect(this.titleInput).toBeVisible({ timeout: 10000 });
   }
 
   async fillTitle(title: string) {
@@ -44,12 +69,6 @@ export class PostPage {
     if (checked !== active) await this.activeToggle.click();
   }
 
-  async selectOptions(options: string[]) {
-    for (const option of options) {
-      await this.optionsDropdown.selectOption(option);
-    }
-  }
-
   async clickCreate() {
     await this.createBtn.click();
   }
@@ -63,6 +82,10 @@ export class PostPage {
   }
 
   getPostRow(title: string) {
-    return this.page.locator(`tr:has(td:text-is("${title}"))`);
+    return this.frame.locator(`tr:has-text("${title}")`);
+  }
+
+  async expectPostCreated(title: string) {
+    await expect(this.getPostRow(title)).toBeVisible();
   }
 }

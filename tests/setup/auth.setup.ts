@@ -5,21 +5,18 @@ import { ENV } from "../../utils/env";
 setup("authenticate", async ({ page }) => {
   const login = new LoginPage(page);
 
-  // Navigate to login page
+  // Navigate to demo page
   await login.goto();
 
   // Login
   await login.login(ENV.EMAIL, ENV.PASSWORD);
 
-  // Wait until dashboard loads
-  await page.waitForLoadState("networkidle");
+  const frame = login.frame;
 
-  // Verify login success
-  // 1️⃣ Check URL contains '/admin'
-  await expect(page).toHaveURL(/\/admin/);
+  // Wait for dashboard to load
+  await expect(frame.locator("text=Collections")).toBeVisible();
 
-  // 2️⃣ Check an element unique in dashboard
-  await expect(page.locator("text=Posts")).toBeVisible();
+  await expect(frame.locator('button:has-text("New record")')).toBeVisible();
 
   // Save session
   await page.context().storageState({

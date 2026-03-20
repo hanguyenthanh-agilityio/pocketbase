@@ -17,7 +17,6 @@ test.describe("Create A New Post", () => {
     await postPage.clickNew();
     await postPage.fillTitle(title);
 
-    // ❌ KHÔNG select option
     await postPage.clickCreate();
 
     await postPage.expectPostCreated(title);

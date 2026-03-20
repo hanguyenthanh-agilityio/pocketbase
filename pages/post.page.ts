@@ -92,9 +92,7 @@ export class PostPage {
     }
   }
 
-  // ✅ SAFE SELECT (NO SCROLL)
   async selectOption() {
-    // nếu dropdown không tồn tại thì skip (tránh fail test không cần option)
     if (!(await this.selectDropdown.count())) return;
 
     await this.selectDropdown.waitFor({ state: "visible", timeout: 5000 });

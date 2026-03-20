@@ -22,12 +22,16 @@ export class PostPage {
   readonly descriptionFrame: FrameLocator;
   readonly descriptionEditor: Locator;
 
+  // Actions (edit)
+  readonly saveBtn: Locator;
+  readonly editBtn: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
-    this.postsMenu = this.frame.getByText("Posts");
+    this.postsMenu = this.frame.getByText(/posts/i);
 
     this.newBtn = this.frame.getByRole("button", { name: /New record/ });
     this.createBtn = this.frame.getByRole("button", { name: /Create/ });
@@ -41,6 +45,9 @@ export class PostPage {
 
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
     this.descriptionEditor = this.descriptionFrame.locator("body");
+
+    this.saveBtn = this.frame.getByRole("button", { name: /save/i });
+    this.editBtn = this.frame.getByRole("button", { name: /edit/i });
   }
 
   async goto() {
@@ -139,5 +146,58 @@ export class PostPage {
     } else {
       await expect(row).toBeVisible();
     }
+  }
+  /** Add methods  */
+
+  // Open edit modal
+  async openEdit(title: string) {
+    const row = this.getPostRow(title);
+
+    await row.waitFor({ state: "visible" });
+
+    await row.click();
+
+    await this.titleInput.waitFor({ state: "visible" });
+
+    await expect(this.saveBtn).toBeVisible();
+  }
+
+  // Click Save
+  async clickSave() {
+    await this.saveBtn.click({ force: true });
+  }
+
+  // Update title
+  async updateTitle(title: string) {
+    await this.titleInput.fill("");
+    await this.titleInput.fill(title);
+  }
+
+  // Clear title (for validation test)
+  async clearTitle() {
+    await this.titleInput.fill("");
+  }
+
+  // Expect updated
+  async expectPostUpdated(title: string) {
+    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
+  }
+
+  // Unsaved changes warning
+  getUnsavedWarning() {
+    return this.frame.getByText(/unsaved/i);
+  }
+
+  // Save button state
+  async expectSaveEnabled(enabled: boolean) {
+    if (enabled) {
+      await expect(this.saveBtn).toBeEnabled();
+    } else {
+      await expect(this.saveBtn).toBeDisabled();
+    }
+  }
+
+  async isTitleInvalid() {
+    return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
   }
 }

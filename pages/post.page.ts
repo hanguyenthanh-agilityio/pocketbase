@@ -26,6 +26,13 @@ export class PostPage {
   readonly saveBtn: Locator;
   readonly editBtn: Locator;
 
+  // Delete
+  readonly deleteBtn: Locator;
+  readonly confirmDeleteBtn: Locator;
+  readonly cancelDeleteBtn: Locator;
+  readonly resetBtn: Locator;
+  readonly selectedText: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
@@ -48,6 +55,13 @@ export class PostPage {
 
     this.saveBtn = this.frame.getByRole("button", { name: /save/i });
     this.editBtn = this.frame.getByRole("button", { name: /edit/i });
+
+    this.deleteBtn = this.frame.getByRole("button", { name: /delete selected/i });
+    this.confirmDeleteBtn = this.frame.getByRole("button", { name: /^yes$/i });
+    this.cancelDeleteBtn = this.frame.getByRole("button", { name: /^no$/i });
+
+    this.resetBtn = this.frame.getByText(/reset/i);
+    this.selectedText = this.frame.getByText(/selected/i);
   }
 
   async goto() {
@@ -199,5 +213,59 @@ export class PostPage {
 
   async isTitleInvalid() {
     return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
+  }
+
+  async selectPost(title: string) {
+    const row = this.getPostRow(title);
+
+    await row.waitFor({ state: "visible" });
+
+    const checkbox = row.locator("label");
+
+    await checkbox.click();
+  }
+
+  async selectMultiple(titles: string[]) {
+    for (const t of titles) {
+      await this.selectPost(t);
+    }
+  }
+
+  async clickDelete() {
+    await this.deleteBtn.waitFor({ state: "visible" });
+    await this.deleteBtn.click();
+  }
+
+  async confirmDelete() {
+    await this.confirmDeleteBtn.waitFor({ state: "visible" });
+    await this.confirmDeleteBtn.click();
+  }
+
+  async cancelDelete() {
+    await this.cancelDeleteBtn.click();
+  }
+
+  async resetSelection() {
+    await this.resetBtn.click();
+  }
+
+  async expectPostDeleted(title: string) {
+    await expect(this.getPostRow(title)).toHaveCount(0);
+  }
+
+  async expectSelectedCount(count: number) {
+    if (count === 0) {
+      await expect(this.selectedText).toHaveCount(0);
+    } else {
+      await expect(this.selectedText).toContainText(`${count}`);
+    }
+  }
+
+  getDeleteSuccessToast() {
+    return this.frame.getByText(/successfully deleted/i);
+  }
+
+  async expectNoSelection() {
+    await expect(this.selectedText).toHaveCount(0);
   }
 }

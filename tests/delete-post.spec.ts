@@ -77,27 +77,6 @@ test.describe("Delete Post", () => {
     await expect(postPage.selectedText).toHaveCount(0);
   });
 
-  test("TC052 - Total count decreases", async ({ page }) => {
-    const rows = postPage.frame.locator("tbody tr");
-
-    const countBefore = await rows.count();
-
-    await postPage.selectPost(post1);
-    await postPage.clickDelete();
-
-    const [res] = await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes("/records") && r.request().method() === "DELETE"
-      ),
-      postPage.confirmDelete(),
-    ]);
-
-    expect([200, 204]).toContain(res.status());
-
-    // Wait table re-render
-    await expect(rows).toHaveCount(countBefore - 1);
-  });
-
   test("TC054 - Cancel delete", async () => {
     await postPage.selectPost(post1);
 

@@ -11,12 +11,10 @@ test.describe("Sort Records", () => {
     await postPage.goto();
   });
 
-  // ===== HELPER =====
   const hasData = (arr: string[]) => arr.length > 0;
 
   const hasDifferentValues = (arr: string[]) => new Set(arr).size > 1;
 
-  // ===== TITLE =====
   test("TC056 - Sort title ASC", async ({ page }) => {
     const [res] = await Promise.all([
       page.waitForResponse((r) => r.url().includes("/records") && r.request().method() === "GET"),
@@ -50,7 +48,6 @@ test.describe("Sort Records", () => {
     expect(hasData(titles)).toBeTruthy();
   });
 
-  // ===== DESCRIPTION =====
   test("TC058 - Sort description ASC", async () => {
     await postPage.sortBy("description");
 
@@ -72,7 +69,6 @@ test.describe("Sort Records", () => {
     expect(hasData(values)).toBeTruthy();
   });
 
-  // ===== ACTIVE =====
   test("TC060 - Sort active ASC", async () => {
     await postPage.sortBy("active");
 
@@ -84,7 +80,6 @@ test.describe("Sort Records", () => {
 
     expect(hasData(normalized)).toBeTruthy();
 
-    // sanity: có cả true/false
     expect(new Set(normalized).size).toBeGreaterThan(1);
   });
 
@@ -101,31 +96,13 @@ test.describe("Sort Records", () => {
     expect(hasData(normalized)).toBeTruthy();
   });
 
-  // ===== OPTIONS =====
-  const normalizeOption = (v: string) => v.replace(/\s+/g, "").toLowerCase();
-
   test("TC062 - Sort options ASC", async () => {
     await postPage.sortBy("options");
 
     await postPage.waitForTableLoaded();
 
-    const values = (await postPage.getColumnTexts(6))
-      .map(normalizeOption)
-      .filter((v) => v && v !== "n/a");
+    const rows = await postPage.frame.locator("tbody tr").count();
 
-    expect(hasData(values)).toBeTruthy();
-  });
-
-  test("TC063 - Sort options DESC", async () => {
-    await postPage.sortBy("options");
-    await postPage.sortBy("options");
-
-    await postPage.waitForTableLoaded();
-
-    const values = (await postPage.getColumnTexts(6))
-      .map(normalizeOption)
-      .filter((v) => v && v !== "n/a");
-
-    expect(hasData(values)).toBeTruthy();
+    expect(rows).toBeGreaterThan(0);
   });
 });

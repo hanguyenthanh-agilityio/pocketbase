@@ -33,6 +33,12 @@ export class PostPage {
   readonly resetBtn: Locator;
   readonly selectedText: Locator;
 
+  // Sort
+  readonly titleHeader: Locator;
+  readonly descriptionHeader: Locator;
+  readonly activeHeader: Locator;
+  readonly optionsHeader: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
@@ -62,6 +68,12 @@ export class PostPage {
 
     this.resetBtn = this.frame.getByText(/reset/i);
     this.selectedText = this.frame.getByText(/selected/i);
+
+    // Sort Locator
+    this.titleHeader = this.frame.getByRole("columnheader", { name: /title/i });
+    this.descriptionHeader = this.frame.getByRole("columnheader", { name: /description/i });
+    this.activeHeader = this.frame.getByRole("columnheader", { name: /active/i });
+    this.optionsHeader = this.frame.getByRole("columnheader", { name: /options/i });
   }
 
   async goto() {
@@ -267,5 +279,41 @@ export class PostPage {
 
   async expectNoSelection() {
     await expect(this.selectedText).toHaveCount(0);
+  }
+
+  // ===== SORT =====
+  async sortBy(column: string) {
+    const header = this.frame
+      .getByRole("columnheader")
+      .filter({ hasText: new RegExp(column, "i") });
+
+    await header.first().click({ force: true });
+  }
+
+  // ===== DATA GETTER =====
+  async getColumnTexts(columnIndex: number) {
+    const values = await this.frame
+      .locator(`tbody tr td:nth-child(${columnIndex})`)
+      .allTextContents();
+
+    return values.map((v) => v.trim());
+  }
+
+  // ===== SAFE WAIT TABLE UPDATE =====
+  async waitForTableLoaded() {
+    await this.frame.locator("tbody tr").first().waitFor();
+  }
+
+  // ===== ASSERT SORT =====
+  async expectSortedAsc(values: string[]) {
+    for (let i = 0; i < values.length - 1; i++) {
+      expect(values[i].localeCompare(values[i + 1]) <= 0).toBeTruthy();
+    }
+  }
+
+  async expectSortedDesc(values: string[]) {
+    for (let i = 0; i < values.length - 1; i++) {
+      expect(values[i].localeCompare(values[i + 1]) >= 0).toBeTruthy();
+    }
   }
 }

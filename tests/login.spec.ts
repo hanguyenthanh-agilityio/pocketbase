@@ -1,47 +1,27 @@
-import { test, expect } from "@playwright/test";
-import { LoginPage } from "../pages/login.page";
+import { test, expect } from "../fixtures/fixture";
 import { DashboardPage } from "../pages/dashboard.page";
-import { boxedStep } from "../utils/boxed-step";
 import { ENV } from "../utils/env";
-
-// disable storage reuse → each test starts with a clean session
-test.use({ storageState: undefined });
 
 test.describe("PocketBase Login", () => {
   const email = ENV.EMAIL;
   const password = ENV.PASSWORD;
 
-  test.beforeEach(async ({ page }) => {
-    const login = new LoginPage(page);
-
-    await boxedStep("Navigate to login page", async () => {
-      await login.goto();
-    });
-  });
-
-  // TC001 - SUCCESS (UI + API)
-  test("TC001 - User can login successfully", async ({ page }) => {
-    const login = new LoginPage(page);
+  test("TC001 - User can login successfully", async ({ page, loginPage }) => {
     const dashboard = new DashboardPage(page);
 
-    // intercept API (browser context)
     const responsePromise = page.waitForResponse((res) =>
       res.url().includes("/auth-with-password")
     );
 
-    // Perform login via UI
-    await login.login(email, password);
+    await loginPage.login(email, password);
 
     const res = await responsePromise;
 
-    // Verify API
     expect(res.status()).toBe(200);
 
-    // Verify response body contains token
     const body = await res.json();
     expect(body.token).toBeTruthy();
 
-    // Verify UI
     await dashboard.expectLoaded();
   });
 
@@ -106,9 +86,7 @@ test.describe("PocketBase Login", () => {
   ];
 
   cases.forEach((c) => {
-    test(`${c.id} - ${c.description}`, async ({ page }) => {
-      const login = new LoginPage(page);
-
+    test(`${c.id}`, async ({ page, loginPage }) => {
       let responsePromise;
 
       // Only listen for API when backend is expected to be called
@@ -119,16 +97,16 @@ test.describe("PocketBase Login", () => {
       }
 
       // Perform login attempt
-      await login.login(c.email, c.password);
+      await loginPage.login(c.email, c.password);
 
       // HTML5 required validation
       if (c.type === "required") {
-        if (!c.email) await login.expectEmailRequired();
-        if (!c.password) await login.expectPasswordRequired();
+        if (!c.email) await loginPage.expectEmailRequired();
+        if (!c.password) await loginPage.expectPasswordRequired();
       }
       // HTML5 format validation
       else if (c.type === "html5") {
-        await login.expectEmailInvalidFormat();
+        await loginPage.expectEmailInvalidFormat();
       }
       // API validation
       else {
@@ -142,10 +120,10 @@ test.describe("PocketBase Login", () => {
         expect(body.message).toContain("Failed");
 
         // Verify UI shows error message
-        await login.expectInvalidCredentialsError();
+        await loginPage.expectInvalidCredentialsError();
       }
 
-      await login.expectStillOnLogin();
+      await loginPage.expectStillOnLogin();
     });
   });
 });

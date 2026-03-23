@@ -1,22 +1,18 @@
-import { test, expect } from "@playwright/test";
-import { getAuthToken } from "../utils/auth";
+import { test, expect } from "../fixtures/fixture";
 
 test.describe("Post API", () => {
-  let token: string;
-
-  test.beforeAll(() => {
-    token = getAuthToken();
-  });
-
-  const headers = () => ({
+  const headers = (token: string) => ({
     Authorization: `Bearer ${token}`,
   });
 
-  test("TC012 - API - Verify create post with required fields only", async ({ request }) => {
+  test("TC012 - API - Verify create post with required fields only", async ({
+    request,
+    authToken,
+  }) => {
     const title = `API Required ${Date.now()}`;
 
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: { title },
     });
 
@@ -26,9 +22,9 @@ test.describe("Post API", () => {
     expect(body.title).toBe(title);
   });
 
-  test("TC013 - API - Create post with all fields", async ({ request }) => {
+  test("TC013 - API - Create post with all fields", async ({ request, authToken }) => {
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: {
         title: "API Full Post",
         description: "Sample description",
@@ -44,20 +40,20 @@ test.describe("Post API", () => {
     expect(body.active).toBeTruthy();
   });
 
-  test("TC014 - API - Verify title is required", async ({ request }) => {
+  test("TC014 - API - Verify title is required", async ({ request, authToken }) => {
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: { title: "" },
     });
 
     expect(res.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("TC015 - API - Verify title accepts special characters", async ({ request }) => {
+  test("TC015 - API - Verify title accepts special characters", async ({ request, authToken }) => {
     const title = "!!!Test@@@" + Date.now();
 
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: { title },
     });
 
@@ -67,15 +63,14 @@ test.describe("Post API", () => {
     expect(body.title).toBe(title);
   });
 
-  test("TC016 - API - Verify title max length validation", async ({ request }) => {
+  test("TC016 - API - Verify title max length validation", async ({ request, authToken }) => {
     const longTitle = "A".repeat(500);
 
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: { title: longTitle },
     });
 
-    // PocketBase behavior: usually reject
     expect([200, 201, 400]).toContain(res.status());
 
     if (res.status() >= 400) {
@@ -84,9 +79,9 @@ test.describe("Post API", () => {
     }
   });
 
-  test("TC017 - API - Verify description supports rich text", async ({ request }) => {
+  test("TC017 - API - Verify description supports rich text", async ({ request, authToken }) => {
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: {
         title: "Rich Text API",
         description: "<b>bold text</b>",
@@ -99,11 +94,11 @@ test.describe("Post API", () => {
     expect(body.description).toContain("bold");
   });
 
-  test("TC018 - API - Verify description long paragraph", async ({ request }) => {
+  test("TC018 - API - Verify description long paragraph", async ({ request, authToken }) => {
     const desc = "Lorem ipsum ".repeat(200);
 
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: {
         title: "Long Desc API",
         description: desc,
@@ -116,9 +111,9 @@ test.describe("Post API", () => {
     expect(body.description.length).toBeGreaterThan(100);
   });
 
-  test("TC019 - API - Verify active true", async ({ request }) => {
+  test("TC019 - API - Verify active true", async ({ request, authToken }) => {
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: {
         title: "Active True API",
         active: true,
@@ -131,9 +126,9 @@ test.describe("Post API", () => {
     expect(body.active).toBe(true);
   });
 
-  test("TC020 - API - Verify active false", async ({ request }) => {
+  test("TC020 - API - Verify active false", async ({ request, authToken }) => {
     const res = await request.post("/api/collections/posts/records", {
-      headers: headers(),
+      headers: headers(authToken),
       data: {
         title: "Active False API",
         active: false,

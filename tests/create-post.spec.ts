@@ -1,28 +1,17 @@
-import { test, expect } from "@playwright/test";
-import { PostPage } from "../pages/post.page";
-
-test.use({ storageState: "playwright/.auth/user.json" });
+import { test, expect } from "../fixtures/fixture";
 
 test.describe("Create A New Post", () => {
-  let postPage: PostPage;
-
-  test.beforeEach(async ({ page }) => {
-    postPage = new PostPage(page);
-    await postPage.goto();
-  });
-
-  test("TC013 - Required fields only", async () => {
+  test("TC013 - Required fields only", async ({ postPage }) => {
     const title = `Post ${Date.now()}`;
 
     await postPage.clickNew();
     await postPage.fillTitle(title);
-
     await postPage.clickCreate();
 
     await postPage.expectPostCreated(title);
   });
 
-  test("TC015 - Special characters", async () => {
+  test("TC015 - Special characters", async ({ postPage }) => {
     const title = "!!!@@@" + Date.now();
 
     await postPage.clickNew();
@@ -32,7 +21,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectPostCreated(title);
   });
 
-  test("TC016 - Title max length", async () => {
+  test("TC016 - Title max length", async ({ postPage }) => {
     const longTitle = "A".repeat(500);
 
     await postPage.clickNew();
@@ -42,7 +31,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectCreateResult(longTitle);
   });
 
-  test("TC017 - Rich text", async () => {
+  test("TC017 - Rich text", async ({ postPage }) => {
     const title = `Rich ${Date.now()}`;
 
     await postPage.clickNew();
@@ -53,7 +42,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectPostCreated(title);
   });
 
-  test("TC018 - Long description", async () => {
+  test("TC018 - Long description", async ({ postPage }) => {
     const title = `Long ${Date.now()}`;
 
     await postPage.clickNew();
@@ -64,7 +53,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectPostCreated(title);
   });
 
-  test("TC019 - Active ON", async () => {
+  test("TC019 - Active ON", async ({ postPage }) => {
     const title = `ON ${Date.now()}`;
 
     await postPage.clickNew();
@@ -75,7 +64,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectPostCreated(title);
   });
 
-  test("TC020 - Active OFF", async () => {
+  test("TC020 - Active OFF", async ({ postPage }) => {
     const title = `OFF ${Date.now()}`;
 
     await postPage.clickNew();
@@ -86,7 +75,7 @@ test.describe("Create A New Post", () => {
     await postPage.expectPostCreated(title);
   });
 
-  test("TC027 - Cancel create", async () => {
+  test("TC027 - Cancel create", async ({ postPage }) => {
     const title = `Cancel ${Date.now()}`;
 
     await postPage.clickNew();
@@ -96,7 +85,7 @@ test.describe("Create A New Post", () => {
     await expect(postPage.getPostRow(title)).toHaveCount(0);
   });
 
-  test("TC028 - Close modal", async () => {
+  test("TC028 - Close modal", async ({ postPage }) => {
     await postPage.clickNew();
     await postPage.clickCloseModal();
 

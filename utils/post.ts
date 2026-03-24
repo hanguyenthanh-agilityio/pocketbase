@@ -4,7 +4,7 @@ export async function createPostViaUI(page: Page, action: () => Promise<void>) {
   try {
     const [res] = await Promise.all([
       page.waitForResponse(
-        (res) => res.request().method() === "POST" && res.url().includes("/posts/records"), // 🔥 loosen condition
+        (res) => res.request().method() === "POST" && res.url().includes("/posts/records"),
         { timeout: 5000 }
       ),
       action(),

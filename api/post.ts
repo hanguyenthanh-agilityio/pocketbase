@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class PostAPI {
   constructor(
     private request: any,
@@ -30,7 +31,7 @@ export class PostAPI {
     });
   }
 
-  // 🔥 retry delete (anti-flaky)
+  // Retry delete
   async safeDelete(id: string, retries = 3) {
     for (let i = 0; i < retries; i++) {
       try {

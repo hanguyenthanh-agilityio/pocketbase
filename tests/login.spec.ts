@@ -9,6 +9,7 @@ test.describe("PocketBase Login", () => {
   test("TC001 - User can login successfully", async ({ page, loginPage }) => {
     const dashboard = new DashboardPage(page);
 
+    // intercept API (browser context)
     const responsePromise = page.waitForResponse((res) =>
       res.url().includes("/auth-with-password")
     );
@@ -17,11 +18,14 @@ test.describe("PocketBase Login", () => {
 
     const res = await responsePromise;
 
+    // Verify API
     expect(res.status()).toBe(200);
 
+    // Verify response body contains token
     const body = await res.json();
     expect(body.token).toBeTruthy();
 
+    // Verify UI
     await dashboard.expectLoaded();
   });
 

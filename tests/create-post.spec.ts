@@ -12,7 +12,6 @@ test.describe("Create A New Post", () => {
       await postPage.clickCreate();
     });
 
-    // ✅ SAFE PUSH
     if (body?.id) {
       createdPostIds.push(body.id);
     }
@@ -47,7 +46,6 @@ test.describe("Create A New Post", () => {
       await postPage.clickCreate();
     });
 
-    // ✅ SAFE CHECK
     if (res && res.status() < 400 && body?.id) {
       createdPostIds.push(body.id);
     }

@@ -6,9 +6,7 @@ export class PostAPI {
   ) {}
 
   private headers() {
-    return {
-      Authorization: `Bearer ${this.token}`,
-    };
+    return { Authorization: `Bearer ${this.token}` };
   }
 
   async create(data: any) {
@@ -16,13 +14,8 @@ export class PostAPI {
       headers: this.headers(),
       data,
     });
-
     const body = await res.json();
-
-    return {
-      res,
-      body,
-    };
+    return { res, body };
   }
 
   async delete(id: string) {
@@ -31,7 +24,6 @@ export class PostAPI {
     });
   }
 
-  // Retry delete
   async safeDelete(id: string, retries = 3) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -42,5 +34,14 @@ export class PostAPI {
         await new Promise((r) => setTimeout(r, 500));
       }
     }
+  }
+
+  async list(filter?: string) {
+    const url = filter
+      ? `/api/collections/posts/records?filter=${encodeURIComponent(filter)}`
+      : "/api/collections/posts/records";
+    const res = await this.request.get(url, { headers: this.headers() });
+    const body = await res.json();
+    return body;
   }
 }

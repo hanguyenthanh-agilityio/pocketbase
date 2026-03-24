@@ -1,23 +1,19 @@
 import { Page } from "@playwright/test";
 
+/**
+ * Create post via UI.
+ * UI only, does not return ID reliably.
+ */
 export async function createPostViaUI(page: Page, action: () => Promise<void>) {
   try {
-    const [res] = await Promise.all([
-      page.waitForResponse(
-        (res) => res.request().method() === "POST" && res.url().includes("/posts/records"),
-        { timeout: 5000 }
-      ),
-      action(),
-    ]);
+    await action();
 
-    const body = await res.json();
-    return { res, body };
-  } catch {
-    await page.waitForTimeout(1000); // wait UI render
+    // wait small time để modal đóng / animation hoàn tất
+    await page.waitForTimeout(1000);
 
-    return {
-      res: null,
-      body: { id: null },
-    };
+    return {}; // UI không trả ID
+  } catch (err) {
+    console.error("Error in createPostViaUI:", err);
+    return {};
   }
 }

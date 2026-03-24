@@ -6,28 +6,33 @@ test.describe("PocketBase Login", () => {
   const email = ENV.EMAIL;
   const password = ENV.PASSWORD;
 
-  test("TC001 - User can login successfully", async ({ page, loginPage }) => {
-    const dashboard = new DashboardPage(page);
+  // POSITIVE CASE
+  test(
+    "TC001 - User can login successfully",
+    { tag: ["@smoke", "@ui", "@login"] },
+    async ({ page, loginPage }) => {
+      const dashboard = new DashboardPage(page);
 
-    // intercept API (browser context)
-    const responsePromise = page.waitForResponse((res) =>
-      res.url().includes("/auth-with-password")
-    );
+      // intercept API (browser context)
+      const responsePromise = page.waitForResponse((res) =>
+        res.url().includes("/auth-with-password")
+      );
 
-    await loginPage.login(email, password);
+      await loginPage.login(email, password);
 
-    const res = await responsePromise;
+      const res = await responsePromise;
 
-    // Verify API
-    expect(res.status()).toBe(200);
+      // Verify API
+      expect(res.status()).toBe(200);
 
-    // Verify response body contains token
-    const body = await res.json();
-    expect(body.token).toBeTruthy();
+      // Verify response body contains token
+      const body = await res.json();
+      expect(body.token).toBeTruthy();
 
-    // Verify UI
-    await dashboard.expectLoaded();
-  });
+      // Verify UI
+      await dashboard.expectLoaded();
+    }
+  );
 
   // NEGATIVE CASES
   const cases = [
@@ -37,6 +42,7 @@ test.describe("PocketBase Login", () => {
       email: "",
       password,
       type: "required",
+      tag: ["@regression", "@ui", "@negative"],
     },
     {
       id: "TC003",
@@ -44,6 +50,7 @@ test.describe("PocketBase Login", () => {
       email,
       password: "",
       type: "required",
+      tag: ["@regression", "@ui", "@negative"],
     },
     {
       id: "TC004",
@@ -51,6 +58,7 @@ test.describe("PocketBase Login", () => {
       email: "",
       password: "",
       type: "required",
+      tag: ["@regression", "@ui", "@negative"],
     },
     {
       id: "TC005",
@@ -58,6 +66,7 @@ test.describe("PocketBase Login", () => {
       email: "123",
       password,
       type: "html5",
+      tag: ["@regression", "@ui", "@negative"],
     },
     {
       id: "TC006",
@@ -65,6 +74,7 @@ test.describe("PocketBase Login", () => {
       email: "test@",
       password,
       type: "html5",
+      tag: ["@regression", "@ui", "@negative"],
     },
     {
       id: "TC007",
@@ -72,6 +82,7 @@ test.describe("PocketBase Login", () => {
       email,
       password: "wrong",
       type: "api",
+      tag: ["@regression", "@api", "@negative"],
     },
     {
       id: "TC008",
@@ -79,6 +90,7 @@ test.describe("PocketBase Login", () => {
       email: "wrong@example.com",
       password,
       type: "api",
+      tag: ["@regression", "@api", "@negative"],
     },
     {
       id: "TC009",
@@ -86,11 +98,12 @@ test.describe("PocketBase Login", () => {
       email: "wrong@example.com",
       password: "wrong",
       type: "api",
+      tag: ["@regression", "@api", "@negative"],
     },
   ];
 
   cases.forEach((c) => {
-    test(`${c.id}`, async ({ page, loginPage }) => {
+    test(`${c.id} - ${c.description}`, { tag: c.tag }, async ({ page, loginPage }) => {
       let responsePromise;
 
       // Only listen for API when backend is expected to be called

@@ -61,10 +61,6 @@ export class PostPage {
 
     // Ensure DOM ready
     await this.page.waitForLoadState("domcontentloaded");
-
-    // Wait Posts menu
-    await expect(this.postsMenu).toBeVisible({ timeout: 15000 });
-
     await this.postsMenu.click();
 
     // Ensure page loaded
@@ -78,24 +74,18 @@ export class PostPage {
     await this.newBtn.click();
 
     await expect(this.titleInput).toBeVisible();
-
-    await this.page.waitForTimeout(300);
   }
 
   async clickCreate() {
     await expect(this.createBtn).toBeEnabled();
     await this.createBtn.click();
-
-    await this.page.waitForTimeout(300);
   }
 
   async clickCancel() {
-    await expect(this.cancelBtn).toBeVisible();
     await this.cancelBtn.click();
   }
 
   async clickCloseModal() {
-    await expect(this.closeModalBtn).toBeVisible();
     await this.closeModalBtn.click();
   }
 
@@ -103,9 +93,7 @@ export class PostPage {
   // FORM
   // ======================
   async fillTitle(title: string) {
-    await expect(this.titleInput).toBeVisible();
     await this.titleInput.fill(title);
-
     await this.titleInput.press("Tab");
   }
 
@@ -115,14 +103,11 @@ export class PostPage {
     await expect(this.descriptionEditor).toBeVisible();
 
     await this.descriptionEditor.click();
-
     await this.descriptionEditor.pressSequentially(desc);
   }
 
   async toggleActive(active: boolean) {
     const label = this.frame.locator("label", { hasText: /active/i });
-
-    await expect(label).toBeVisible();
 
     const checked = await this.activeInput.isChecked();
 
@@ -133,8 +118,6 @@ export class PostPage {
 
   async selectOption() {
     if (!(await this.selectDropdown.count())) return;
-
-    await expect(this.selectDropdown).toBeVisible();
 
     await this.selectDropdown.click();
 
@@ -153,6 +136,19 @@ export class PostPage {
 
   async expectPostCreated(title: string) {
     await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
+  }
+
+  async expectCreateSuccess(title: string) {
+    const shortTitle = title.slice(0, 20);
+    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
+
+    await expect(row.first()).toBeVisible({ timeout: 5000 });
+  }
+
+  async expectCreateError() {
+    const errorMsg = this.frame.getByText(/error|required|max/i);
+
+    await expect(errorMsg).toBeVisible({ timeout: 5000 });
   }
 
   async expectCreateResult(title: string) {

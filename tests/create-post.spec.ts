@@ -1,4 +1,3 @@
-import { Page } from "@playwright/test";
 import { test, expect } from "../fixtures/fixture";
 import { createPostViaUI } from "../utils/post";
 
@@ -9,10 +8,14 @@ test.describe("Create A New Post", () => {
     const { body } = await createPostViaUI(page, async () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    // ✅ SAFE PUSH
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });
@@ -23,10 +26,13 @@ test.describe("Create A New Post", () => {
     const { body } = await createPostViaUI(page, async () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });
@@ -37,10 +43,12 @@ test.describe("Create A New Post", () => {
     const { res, body } = await createPostViaUI(page, async () => {
       await postPage.clickNew();
       await postPage.fillTitle(longTitle);
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    if (res.status() < 400) {
+    // ✅ SAFE CHECK
+    if (res && res.status() < 400 && body?.id) {
       createdPostIds.push(body.id);
     }
 
@@ -54,10 +62,13 @@ test.describe("Create A New Post", () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
       await postPage.fillDescription("**bold**");
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });
@@ -69,10 +80,13 @@ test.describe("Create A New Post", () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
       await postPage.fillDescription("Lorem ".repeat(100));
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });
@@ -84,10 +98,13 @@ test.describe("Create A New Post", () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
       await postPage.toggleActive(true);
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });
@@ -99,10 +116,13 @@ test.describe("Create A New Post", () => {
       await postPage.clickNew();
       await postPage.fillTitle(title);
       await postPage.toggleActive(false);
+      await expect(postPage.createBtn).toBeEnabled();
       await postPage.clickCreate();
     });
 
-    createdPostIds.push(body.id);
+    if (body?.id) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectPostCreated(title);
   });

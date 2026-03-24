@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern */
 import { test as base, expect } from "@playwright/test";
 import { LoginPage } from "../pages/login.page";
 import { PostPage } from "../pages/post.page";
@@ -58,25 +59,32 @@ export const test = base.extend<AppFixtures>({
   },
 
   // AUTO CLEANUP
-  createdPostIds: async ({ postApi }, use) => {
+  createdPostIds: async ({ postApi }, use, testInfo) => {
     const ids: string[] = [];
 
     await use(ids);
 
     if (!ids.length) return;
 
-    console.log(`🧹 Cleaning ${ids.length} post(s)...`);
+    await base.step(`Cleanup ${ids.length} post(s)`, async () => {
+      const results: { id: string; status: string }[] = [];
 
-    await Promise.all(
-      ids.map(async (id) => {
-        try {
-          await postApi.safeDelete(id);
-          console.log(`✅ Deleted: ${id}`);
-        } catch {
-          console.warn(`❌ Failed to delete post: ${id}`);
-        }
-      })
-    );
+      await Promise.all(
+        ids.map(async (id) => {
+          try {
+            await postApi.safeDelete(id);
+            results.push({ id, status: "deleted" });
+          } catch {
+            results.push({ id, status: "failed" });
+          }
+        })
+      );
+
+      await testInfo.attach("cleanup-results", {
+        body: JSON.stringify(results, null, 2),
+        contentType: "application/json",
+      });
+    });
   },
 });
 

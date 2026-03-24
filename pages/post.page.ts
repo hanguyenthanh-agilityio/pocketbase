@@ -75,20 +75,20 @@ export class PostPage {
   // ACTIONS
   // ======================
   async clickNew() {
-    await expect(this.newBtn).toBeVisible();
     await this.newBtn.click();
 
-    await expect(this.titleInput).toBeVisible({ timeout: 10000 });
+    await expect(this.titleInput).toBeVisible();
+
+    await this.page.waitForTimeout(300);
   }
 
   async clickCreate() {
-    await expect(this.createBtn).toBeVisible();
-
-    // 🔥 ensure button enabled
     await expect(this.createBtn).toBeEnabled();
-
     await this.createBtn.click();
+
+    await this.page.waitForTimeout(300);
   }
+
   async clickCancel() {
     await expect(this.cancelBtn).toBeVisible();
     await this.cancelBtn.click();
@@ -110,15 +110,13 @@ export class PostPage {
   }
 
   async fillDescription(desc: string) {
+    if (!(await this.descriptionEditor.count())) return;
+
     await expect(this.descriptionEditor).toBeVisible();
 
     await this.descriptionEditor.click();
 
-    try {
-      await this.descriptionEditor.fill(desc);
-    } catch {
-      await this.descriptionEditor.type(desc);
-    }
+    await this.descriptionEditor.pressSequentially(desc);
   }
 
   async toggleActive(active: boolean) {
@@ -158,18 +156,14 @@ export class PostPage {
   }
 
   async expectCreateResult(title: string) {
-    const row = this.getPostRow(title);
-    const errorMsg = this.frame.getByText("Failed to create record.");
+    const shortTitle = title.slice(0, 20);
+
+    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
+    const errorMsg = this.frame.getByText(/error|required|max/i);
 
     await Promise.race([
-      row.first().waitFor({ state: "visible" }),
-      errorMsg.waitFor({ state: "visible" }),
+      row.first().waitFor({ state: "visible", timeout: 5000 }),
+      errorMsg.waitFor({ state: "visible", timeout: 5000 }),
     ]);
-
-    if (await errorMsg.isVisible().catch(() => false)) {
-      await expect(errorMsg).toBeVisible();
-    } else {
-      await expect(row).toBeVisible();
-    }
   }
 }

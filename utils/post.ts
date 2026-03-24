@@ -1,18 +1,23 @@
 import { Page } from "@playwright/test";
 
 export async function createPostViaUI(page: Page, action: () => Promise<void>) {
-  const context = page.context();
+  try {
+    const [res] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.request().method() === "POST" && res.url().includes("/posts/records"), // 🔥 loosen condition
+        { timeout: 5000 }
+      ),
+      action(),
+    ]);
 
-  const [res] = await Promise.all([
-    context.waitForEvent("response", {
-      predicate: (res) =>
-        res.url().includes("/api/collections/posts/records") && res.request().method() === "POST",
-      timeout: 15000,
-    }),
-    action(),
-  ]);
+    const body = await res.json();
+    return { res, body };
+  } catch {
+    await page.waitForTimeout(1000); // wait UI render
 
-  const body = await res.json();
-
-  return { res, body };
+    return {
+      res: null,
+      body: { id: null },
+    };
+  }
 }

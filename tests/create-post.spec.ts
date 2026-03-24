@@ -1,77 +1,109 @@
+import { Page } from "@playwright/test";
 import { test, expect } from "../fixtures/fixture";
+import { createPostViaUI } from "../utils/post";
 
 test.describe("Create A New Post", () => {
-  test("TC013 - Required fields only", async ({ postPage }) => {
+  test("TC013 - Required fields only", async ({ postPage, page, createdPostIds }) => {
     const title = `Post ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.clickCreate();
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
+    });
+
+    createdPostIds.push(body.id);
 
     await postPage.expectPostCreated(title);
   });
 
-  test("TC015 - Special characters", async ({ postPage }) => {
+  test("TC015 - Special characters", async ({ postPage, page, createdPostIds }) => {
     const title = "!!!@@@" + Date.now();
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.clickCreate();
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
+    });
+
+    createdPostIds.push(body.id);
 
     await postPage.expectPostCreated(title);
   });
 
-  test("TC016 - Title max length", async ({ postPage }) => {
+  test("TC016 - Title max length", async ({ postPage, page, createdPostIds }) => {
     const longTitle = "A".repeat(500);
 
-    await postPage.clickNew();
-    await postPage.fillTitle(longTitle);
-    await postPage.clickCreate();
+    const { res, body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(longTitle);
+      await postPage.clickCreate();
+    });
+
+    if (res.status() < 400) {
+      createdPostIds.push(body.id);
+    }
 
     await postPage.expectCreateResult(longTitle);
   });
 
-  test("TC017 - Rich text", async ({ postPage }) => {
+  test("TC017 - Rich text", async ({ postPage, page, createdPostIds }) => {
     const title = `Rich ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.fillDescription("**bold**");
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.fillDescription("**bold**");
+      await postPage.clickCreate();
+    });
 
-    await postPage.clickCreate();
+    createdPostIds.push(body.id);
+
     await postPage.expectPostCreated(title);
   });
 
-  test("TC018 - Long description", async ({ postPage }) => {
+  test("TC018 - Long description", async ({ postPage, page, createdPostIds }) => {
     const title = `Long ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.fillDescription("Lorem ".repeat(100));
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.fillDescription("Lorem ".repeat(100));
+      await postPage.clickCreate();
+    });
 
-    await postPage.clickCreate();
+    createdPostIds.push(body.id);
+
     await postPage.expectPostCreated(title);
   });
 
-  test("TC019 - Active ON", async ({ postPage }) => {
+  test("TC019 - Active ON", async ({ postPage, page, createdPostIds }) => {
     const title = `ON ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.toggleActive(true);
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.toggleActive(true);
+      await postPage.clickCreate();
+    });
 
-    await postPage.clickCreate();
+    createdPostIds.push(body.id);
+
     await postPage.expectPostCreated(title);
   });
 
-  test("TC020 - Active OFF", async ({ postPage }) => {
+  test("TC020 - Active OFF", async ({ postPage, page, createdPostIds }) => {
     const title = `OFF ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.toggleActive(false);
+    const { body } = await createPostViaUI(page, async () => {
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.toggleActive(false);
+      await postPage.clickCreate();
+    });
 
-    await postPage.clickCreate();
+    createdPostIds.push(body.id);
+
     await postPage.expectPostCreated(title);
   });
 

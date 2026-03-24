@@ -1,105 +1,174 @@
-import { test, expect } from "@playwright/test";
-import { PostPage } from "../pages/post.page";
+import { test, expect } from "../fixtures/fixture";
+import { createPostViaUI } from "../utils/post";
 
-test.use({ storageState: "playwright/.auth/user.json" });
+test.describe("Create Post - UI Validation", () => {
+  test(
+    "TC013 - Verify user can create a post with required fields only (title)",
+    { tag: ["@smoke", "@ui", "@post", "@create"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `Post ${Date.now()}`;
 
-test.describe("Create A New Post", () => {
-  let postPage: PostPage;
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-  test.beforeEach(async ({ page }) => {
-    postPage = new PostPage(page);
-    await postPage.goto();
-  });
+      // Get ID via API
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-  test("TC013 - Required fields only", async () => {
-    const title = `Post ${Date.now()}`;
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
+  test(
+    "TC015 - Verify user can create a post with special characters in title",
+    { tag: ["@regression", "@ui", "@post"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `!!!@@@ ${Date.now()}`;
 
-    await postPage.clickCreate();
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-    await postPage.expectPostCreated(title);
-  });
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-  test("TC015 - Special characters", async () => {
-    const title = "!!!@@@" + Date.now();
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.clickCreate();
+  test(
+    "TC016 - Verify system handles title exceeding maximum length",
+    { tag: ["@regression", "@ui", "@validation"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const longTitle = "A".repeat(500);
 
-    await postPage.expectPostCreated(title);
-  });
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(longTitle);
+        await postPage.clickCreate();
+      });
 
-  test("TC016 - Title max length", async () => {
-    const longTitle = "A".repeat(500);
+      const posts = await postApi.list(`title="${longTitle}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-    await postPage.clickNew();
-    await postPage.fillTitle(longTitle);
-    await postPage.clickCreate();
+      await postPage.expectCreateResult(longTitle);
+    }
+  );
 
-    await postPage.expectCreateResult(longTitle);
-  });
+  test(
+    "TC017 - Verify user can create a post with rich text description",
+    { tag: ["@regression", "@ui", "@post"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `Rich ${Date.now()}`;
 
-  test("TC017 - Rich text", async () => {
-    const title = `Rich ${Date.now()}`;
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.fillDescription("**bold**");
+        await postPage.clickCreate();
+      });
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.fillDescription("**bold**");
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-    await postPage.clickCreate();
-    await postPage.expectPostCreated(title);
-  });
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-  test("TC018 - Long description", async () => {
-    const title = `Long ${Date.now()}`;
+  test(
+    "TC018 - Verify user can create a post with long description content",
+    { tag: ["@regression", "@ui", "@post"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `Long ${Date.now()}`;
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.fillDescription("Lorem ".repeat(100));
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.fillDescription("Lorem ".repeat(100));
+        await postPage.clickCreate();
+      });
 
-    await postPage.clickCreate();
-    await postPage.expectPostCreated(title);
-  });
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-  test("TC019 - Active ON", async () => {
-    const title = `ON ${Date.now()}`;
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.toggleActive(true);
+  test(
+    "TC019 - Verify user can create a post with Active status set to ON",
+    { tag: ["@regression", "@ui", "@post"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `ON ${Date.now()}`;
 
-    await postPage.clickCreate();
-    await postPage.expectPostCreated(title);
-  });
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.toggleActive(true);
+        await postPage.clickCreate();
+      });
 
-  test("TC020 - Active OFF", async () => {
-    const title = `OFF ${Date.now()}`;
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.toggleActive(false);
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-    await postPage.clickCreate();
-    await postPage.expectPostCreated(title);
-  });
+  test(
+    "TC020 - Verify user can create a post with Active status set to OFF",
+    { tag: ["@regression", "@ui", "@post"] },
+    async ({ postPage, page, postApi, createdPostIds }) => {
+      const title = `OFF ${Date.now()}`;
 
-  test("TC027 - Cancel create", async () => {
-    const title = `Cancel ${Date.now()}`;
+      await createPostViaUI(page, async () => {
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.toggleActive(false);
+        await postPage.clickCreate();
+      });
 
-    await postPage.clickNew();
-    await postPage.fillTitle(title);
-    await postPage.clickCancel();
+      const posts = await postApi.list(`title="${title}"`);
+      const id = posts.items?.[0]?.id;
+      if (id) createdPostIds.push(id);
 
-    await expect(postPage.getPostRow(title)).toHaveCount(0);
-  });
+      await postPage.expectPostCreated(title);
+    }
+  );
 
-  test("TC028 - Close modal", async () => {
-    await postPage.clickNew();
-    await postPage.clickCloseModal();
+  test(
+    "TC027 - Verify user can cancel post creation and no data is saved",
+    { tag: ["@regression", "@ui", "@negative"] },
+    async ({ postPage }) => {
+      const title = `Cancel ${Date.now()}`;
 
-    await expect(postPage.titleInput).toHaveCount(0);
-  });
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCancel();
+
+      await expect(postPage.getPostRow(title)).toHaveCount(0);
+    }
+  );
+
+  test(
+    "TC028 - Verify modal is closed when user clicks close button",
+    { tag: ["@regression", "@ui"] },
+    async ({ postPage }) => {
+      await postPage.clickNew();
+      await postPage.clickCloseModal();
+
+      await expect(postPage.titleInput).toHaveCount(0);
+    }
+  );
 });

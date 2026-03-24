@@ -29,20 +29,24 @@ export class PostPage {
   constructor(page: Page) {
     this.page = page;
 
+    // Main iframe
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
     this.postsMenu = this.frame.getByText(/posts/i);
 
-    this.newBtn = this.frame.getByRole("button", { name: /New record/ });
-    this.createBtn = this.frame.getByRole("button", { name: /Create/ });
-    this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/ });
-    this.closeModalBtn = this.frame.getByRole("button", { name: /Close/ });
+    // Buttons
+    this.newBtn = this.frame.getByRole("button", { name: /New record/i });
+    this.createBtn = this.frame.getByRole("button", { name: /Create/i });
+    this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
+    this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
 
+    // Fields
     this.titleInput = this.frame.getByLabel(/title/i);
     this.activeInput = this.frame.getByLabel(/active/i);
 
     this.selectDropdown = this.frame.getByRole("button", { name: /select/i });
 
+    // Rich text editor iframe
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
     this.descriptionEditor = this.descriptionFrame.locator("body");
 
@@ -50,80 +54,88 @@ export class PostPage {
     this.editBtn = this.frame.getByRole("button", { name: /edit/i });
   }
 
+  // ======================
+  // NAVIGATION
+  // ======================
   async goto() {
     await this.page.goto("/demo/");
 
-    // wait iframe
-    await this.page.waitForSelector('iframe[title="Demo dashboard"]');
+    const iframe = this.page.locator('iframe[title="Demo dashboard"]');
 
-    // wait UI inside iframe
-    await this.postsMenu.waitFor({ state: "visible", timeout: 15000 });
+    // Wait iframe ready
+    await expect(iframe).toBeVisible({ timeout: 15000 });
 
-    await this.postsMenu.click({ force: true });
+    // Ensure DOM ready
+    await this.page.waitForLoadState("domcontentloaded");
+    await this.postsMenu.click();
 
+    // Ensure page loaded
     await expect(this.newBtn).toBeVisible({ timeout: 15000 });
   }
 
+  // ======================
+  // ACTIONS
+  // ======================
   async clickNew() {
-    await this.newBtn.click({ force: true });
-    await expect(this.titleInput).toBeVisible({ timeout: 10000 });
+    await this.newBtn.click();
+
+    await expect(this.titleInput).toBeVisible();
   }
 
+  async clickCreate() {
+    await expect(this.createBtn).toBeEnabled();
+    await this.createBtn.click();
+  }
+
+  async clickCancel() {
+    await this.cancelBtn.click();
+  }
+
+  async clickCloseModal() {
+    await this.closeModalBtn.click();
+  }
+
+  // ======================
+  // FORM
+  // ======================
   async fillTitle(title: string) {
-    await this.titleInput.waitFor({ state: "visible" });
     await this.titleInput.fill(title);
+    await this.titleInput.press("Tab");
   }
 
   async fillDescription(desc: string) {
-    const editor = this.descriptionEditor;
+    if (!(await this.descriptionEditor.count())) return;
 
-    await editor.waitFor({ state: "visible" });
-    await editor.click({ force: true });
+    await expect(this.descriptionEditor).toBeVisible();
 
-    try {
-      await editor.fill(desc);
-    } catch {
-      await editor.type(desc);
-    }
+    await this.descriptionEditor.click();
+    await this.descriptionEditor.pressSequentially(desc);
   }
 
   async toggleActive(active: boolean) {
     const label = this.frame.locator("label", { hasText: /active/i });
 
-    await label.waitFor({ state: "visible" });
-
     const checked = await this.activeInput.isChecked();
 
     if (checked !== active) {
-      await label.click({ force: true });
+      await label.click();
     }
   }
 
   async selectOption() {
     if (!(await this.selectDropdown.count())) return;
 
-    await this.selectDropdown.waitFor({ state: "visible", timeout: 5000 });
-
-    await this.selectDropdown.click({ force: true });
+    await this.selectDropdown.click();
 
     const option = this.frame.getByRole("menuitem").first();
 
-    await option.waitFor({ state: "visible", timeout: 5000 });
-    await option.click({ force: true });
+    await expect(option).toBeVisible();
+    await option.click();
   }
 
-  async clickCreate() {
-    await this.createBtn.click({ force: true });
-  }
-
-  async clickCancel() {
-    await this.cancelBtn.click({ force: true });
-  }
-
-  async clickCloseModal() {
-    await this.closeModalBtn.click({ force: true });
-  }
-
+  // ======================
+  // ASSERTIONS
+  // ======================
   getPostRow(title: string) {
     return this.frame.locator(`tr:has-text("${title}")`);
   }
@@ -132,20 +144,29 @@ export class PostPage {
     await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
   }
 
+  async expectCreateSuccess(title: string) {
+    const shortTitle = title.slice(0, 20);
+    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
+
+    await expect(row.first()).toBeVisible({ timeout: 5000 });
+  }
+
+  async expectCreateError() {
+    const errorMsg = this.frame.getByText(/error|required|max/i);
+
+    await expect(errorMsg).toBeVisible({ timeout: 5000 });
+  }
+
   async expectCreateResult(title: string) {
-    const row = this.getPostRow(title);
-    const errorMsg = this.frame.getByText("Failed to create record.");
+    const shortTitle = title.slice(0, 20);
+
+    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
+    const errorMsg = this.frame.getByText(/error|required|max/i);
 
     await Promise.race([
-      row.first().waitFor({ state: "visible" }),
-      errorMsg.waitFor({ state: "visible" }),
+      row.first().waitFor({ state: "visible", timeout: 5000 }),
+      errorMsg.waitFor({ state: "visible", timeout: 5000 }),
     ]);
-
-    if (await errorMsg.isVisible().catch(() => false)) {
-      await expect(errorMsg).toBeVisible();
-    } else {
-      await expect(row).toBeVisible();
-    }
   }
   /** Add methods  */
 

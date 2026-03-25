@@ -3,7 +3,7 @@ import { test, expect } from "../fixtures/fixture";
 test.describe("Edit Post API", () => {
   test(
     "TC046 - API - Verify user can update post title successfully",
-    { tag: ["@smoke", "@api", "@post", "@edit"] },
+    { tag: ["@TC046", "@smoke", "@api", "@post", "@edit"] },
     async ({ postApi, createdPostIds }) => {
       const createTitle = `API Post ${Date.now()}`;
       const { body: created } = await postApi.create({ title: createTitle });
@@ -23,7 +23,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC047 - API - Verify system returns error when updating post with empty title",
-    { tag: ["@regression", "@api", "@validation"] },
+    { tag: ["@TC047", "@regression", "@api", "@validation"] },
     async ({ postApi, createdPostIds }) => {
       const { body: created } = await postApi.create({
         title: `API Post ${Date.now()}`,
@@ -42,7 +42,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC048 - API - Verify user can update post description",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC048", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { body: created } = await postApi.create({
         title: `API Post ${Date.now()}`,
@@ -63,7 +63,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC049 - API - Verify user can set active status to true",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC049", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { body: created } = await postApi.create({
         title: `API Post ${Date.now()}`,
@@ -83,7 +83,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC050 - API - Verify user can set active status to false",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC050", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { body: created } = await postApi.create({
         title: `API Post ${Date.now()}`,
@@ -103,7 +103,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC051 - API - Verify system returns error when updating non-existing post",
-    { tag: ["@regression", "@api", "@negative"] },
+    { tag: ["@TC051", "@regression", "@api", "@negative"] },
     async ({ postApi }) => {
       const fakeId = "non_existing_id";
 
@@ -117,7 +117,7 @@ test.describe("Edit Post API", () => {
 
   test(
     "TC052 - API - Verify unauthorized user cannot update post",
-    { tag: ["@regression", "@api", "@negative"] },
+    { tag: ["@TC052", "@regression", "@api", "@negative"] },
     async ({ request }) => {
       const res = await request.patch("/api/collections/posts/records/some-id", {
         headers: {

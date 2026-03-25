@@ -7,7 +7,7 @@ export class PostPage {
   // Navigation
   readonly postsMenu: Locator;
 
-  // Actions
+  // Buttons
   readonly newBtn: Locator;
   readonly createBtn: Locator;
   readonly cancelBtn: Locator;
@@ -16,13 +16,12 @@ export class PostPage {
   // Fields
   readonly titleInput: Locator;
   readonly activeInput: Locator;
-  readonly selectDropdown: Locator;
 
-  // Rich text iframe
+  // Rich text editor iframe
   readonly descriptionFrame: FrameLocator;
   readonly descriptionEditor: Locator;
 
-  // Actions (edit)
+  // Edit buttons
   readonly saveBtn: Locator;
   readonly editBtn: Locator;
 
@@ -39,11 +38,12 @@ export class PostPage {
     // Main iframe
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
-    this.postsMenu = this.frame.getByText(/posts/i);
+    // Navigation
+    this.postsMenu = this.frame.getByRole("link", { name: /posts/i });
 
     // Buttons
-    this.newBtn = this.frame.getByRole("button", { name: /New record/i });
-    this.createBtn = this.frame.getByRole("button", { name: /Create/i });
+    this.newBtn = this.frame.locator("header").getByRole("button", { name: /New record/i });
+    this.createBtn = this.frame.getByRole("button", { name: /^Create$/i });
     this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
     this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
 
@@ -51,12 +51,11 @@ export class PostPage {
     this.titleInput = this.frame.getByLabel(/title/i);
     this.activeInput = this.frame.getByLabel(/active/i);
 
-    this.selectDropdown = this.frame.getByRole("button", { name: /select/i });
-
     // Rich text editor iframe
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
     this.descriptionEditor = this.descriptionFrame.locator("body");
 
+    // Edit
     this.saveBtn = this.frame.getByRole("button", { name: /save/i });
     this.editBtn = this.frame.getByRole("button", { name: /edit/i });
 
@@ -73,31 +72,42 @@ export class PostPage {
   // ======================
   async goto() {
     await this.page.goto("/demo/");
-
     const iframe = this.page.locator('iframe[title="Demo dashboard"]');
-
-    // Wait iframe ready
-    await expect(iframe).toBeVisible({ timeout: 15000 });
-
-    // Ensure DOM ready
-    await this.page.waitForLoadState("domcontentloaded");
-    await this.postsMenu.click();
-
-    // Ensure page loaded
+    await expect(iframe).toBeVisible();
+    await this.postsMenu.waitFor({ state: "visible" });
+    await this.page.waitForLoadState("networkidle");
+    await this.postsMenu.first().click();
     await expect(this.newBtn).toBeVisible({ timeout: 15000 });
   }
 
   // ======================
-  // ACTIONS
+  // ACTIONS - CREATE
   // ======================
   async clickNew() {
-    await this.newBtn.click();
-
+    await this.newBtn.first().click();
     await expect(this.titleInput).toBeVisible();
   }
 
+  async fillTitle(title: string) {
+    await this.titleInput.fill(title);
+  }
+
+  async fillDescription(desc: string) {
+    if ((await this.descriptionEditor.count()) === 0) return;
+    await this.descriptionEditor.click();
+    await this.descriptionEditor.fill(desc);
+  }
+
+  async toggleActive(active: boolean) {
+    const label = this.frame.locator("label", { hasText: /active/i });
+    await expect(label).toBeVisible();
+    const checked = await this.activeInput.isChecked();
+    if (checked !== active) {
+      await label.click();
+    }
+  }
+
   async clickCreate() {
-    await expect(this.createBtn).toBeEnabled();
     await this.createBtn.click();
   }
 
@@ -110,81 +120,21 @@ export class PostPage {
   }
 
   // ======================
-  // FORM
+  // ROW HELPERS
   // ======================
-  async fillTitle(title: string) {
-    await this.titleInput.fill(title);
-    await this.titleInput.press("Tab");
+  getRowByData(title: string, description?: string) {
+    let row = this.frame.locator("tr", { hasText: title });
+    if (description) row = row.filter({ hasText: description });
+    return row;
   }
 
-  async fillDescription(desc: string) {
-    if (!(await this.descriptionEditor.count())) return;
-
-    await expect(this.descriptionEditor).toBeVisible();
-
-    await this.descriptionEditor.click();
-    await this.descriptionEditor.pressSequentially(desc);
-  }
-
-  async toggleActive(active: boolean) {
-    const label = this.frame.locator("label", { hasText: /active/i });
-
-    const checked = await this.activeInput.isChecked();
-
-    if (checked !== active) {
-      await label.click();
-    }
-  }
-
-  async selectOption() {
-    if (!(await this.selectDropdown.count())) return;
-
-    await this.selectDropdown.click();
-
-    const option = this.frame.getByRole("menuitem").first();
-
-    await expect(option).toBeVisible();
-    await option.click();
-  }
-
-  // ======================
-  // ASSERTIONS
-  // ======================
   getPostRow(title: string) {
-    return this.frame.locator(`tr:has-text("${title}")`);
+    return this.getRowByData(title).first();
   }
 
-  async expectPostCreated(title: string) {
-    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
-  }
-
-  async expectCreateSuccess(title: string) {
-    const shortTitle = title.slice(0, 20);
-    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
-
-    await expect(row.first()).toBeVisible({ timeout: 5000 });
-  }
-
-  async expectCreateError() {
-    const errorMsg = this.frame.getByText(/error|required|max/i);
-
-    await expect(errorMsg).toBeVisible({ timeout: 5000 });
-  }
-
-  async expectCreateResult(title: string) {
-    const shortTitle = title.slice(0, 20);
-
-    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
-    const errorMsg = this.frame.getByText(/error|required|max/i);
-
-    await Promise.race([
-      row.first().waitFor({ state: "visible", timeout: 5000 }),
-      errorMsg.waitFor({ state: "visible", timeout: 5000 }),
-    ]);
-  }
-  /** Add methods  */
-
-  // Open edit modal
+  // ======================
+  // ACTIONS - EDIT
+  // ======================
   async openEdit(title: string) {
     const row = this.getPostRow(title);
 
@@ -225,11 +175,8 @@ export class PostPage {
 
   // Save button state
   async expectSaveEnabled(enabled: boolean) {
-    if (enabled) {
-      await expect(this.saveBtn).toBeEnabled();
-    } else {
-      await expect(this.saveBtn).toBeDisabled();
-    }
+    if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
+    else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
   }
 
   async isTitleInvalid() {

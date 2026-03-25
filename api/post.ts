@@ -18,6 +18,22 @@ export class PostAPI {
     return { res, body };
   }
 
+  async update(id: string, data: any) {
+    const res = await this.request.patch(`/api/collections/posts/records/${id}`, {
+      headers: this.headers(),
+      data,
+    });
+
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+
+    return { res, body };
+  }
+
   async delete(id: string) {
     return this.request.delete(`/api/collections/posts/records/${id}`, {
       headers: this.headers(),

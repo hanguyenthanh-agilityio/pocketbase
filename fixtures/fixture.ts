@@ -56,7 +56,6 @@ export const test = base.extend<AppFixtures>({
     const ids: string[] = [];
     await use(ids);
 
-    // Nếu không có post nào, attach thông tin vào test report
     if (!ids.length) {
       await testInfo.attach("cleanup-results", {
         body: JSON.stringify({ message: "No posts to cleanup" }, null, 2),

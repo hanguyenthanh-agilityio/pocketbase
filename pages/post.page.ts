@@ -16,7 +16,6 @@ export class PostPage {
   // Fields
   readonly titleInput: Locator;
   readonly activeInput: Locator;
-  readonly selectDropdown: Locator;
 
   // Rich text iframe
   readonly descriptionFrame: FrameLocator;
@@ -33,15 +32,14 @@ export class PostPage {
 
     // Buttons
     this.newBtn = this.frame.locator("header").getByRole("button", { name: /New record/i });
-    this.createBtn = this.frame.getByRole("button", { name: /Create/i });
+
+    this.createBtn = this.frame.getByRole("button", { name: /^Create$/i });
     this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
     this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
 
     // Fields
     this.titleInput = this.frame.getByLabel(/title/i);
     this.activeInput = this.frame.getByLabel(/active/i);
-
-    this.selectDropdown = this.frame.getByRole("button", { name: /select/i });
 
     // Rich text editor iframe
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
@@ -57,13 +55,15 @@ export class PostPage {
     const iframe = this.page.locator('iframe[title="Demo dashboard"]');
 
     // Wait iframe ready
-    await expect(iframe).toBeVisible({ timeout: 15000 });
+    await expect(iframe).toBeVisible();
 
-    // Ensure DOM ready
-    await this.page.waitForLoadState("domcontentloaded");
-    await this.postsMenu.click();
+    // Wait element inside iframe
+    await this.postsMenu.waitFor({ state: "visible" });
 
-    // Ensure page loaded
+    await this.page.waitForLoadState("networkidle");
+
+    await this.postsMenu.first().click();
+
     await expect(this.newBtn).toBeVisible({ timeout: 15000 });
   }
 
@@ -71,13 +71,37 @@ export class PostPage {
   // ACTIONS
   // ======================
   async clickNew() {
-    await this.newBtn.click();
-
+    await this.newBtn.first().click();
     await expect(this.titleInput).toBeVisible();
   }
 
+  async fillTitle(title: string) {
+    await this.titleInput.fill(title);
+  }
+
+  async fillDescription(desc: string) {
+    if (!(await this.descriptionEditor.count())) return;
+
+    await this.descriptionEditor.click();
+    await this.descriptionEditor.fill(desc);
+  }
+
+  async toggleActive(active: boolean) {
+    const checkbox = this.activeInput;
+
+    // label clickable (UI visible)
+    const label = this.frame.locator("label", { hasText: /active/i });
+
+    await expect(label).toBeVisible();
+
+    const checked = await checkbox.isChecked();
+
+    if (checked !== active) {
+      await label.click(); // Click label instead of input
+    }
+  }
+
   async clickCreate() {
-    await expect(this.createBtn).toBeEnabled();
     await this.createBtn.click();
   }
 
@@ -89,65 +113,13 @@ export class PostPage {
     await this.closeModalBtn.click();
   }
 
-  // ======================
-  // FORM
-  // ======================
-  async fillTitle(title: string) {
-    await this.titleInput.fill(title);
-    await this.titleInput.press("Tab");
-  }
+  getRowByData(title: string, description?: string) {
+    const row = this.frame.locator("tr", { hasText: title });
 
-  async fillDescription(desc: string) {
-    if (!(await this.descriptionEditor.count())) return;
-
-    await expect(this.descriptionEditor).toBeVisible();
-
-    await this.descriptionEditor.click();
-    await this.descriptionEditor.pressSequentially(desc);
-  }
-
-  async toggleActive(active: boolean) {
-    const label = this.frame.locator("label", { hasText: /active/i });
-
-    const checked = await this.activeInput.isChecked();
-
-    if (checked !== active) {
-      await label.click();
+    if (description) {
+      return row.filter({ hasText: description });
     }
-  }
 
-  async selectOption() {
-    if (!(await this.selectDropdown.count())) return;
-
-    await this.selectDropdown.click();
-
-    const option = this.frame.getByRole("menuitem").first();
-
-    await expect(option).toBeVisible();
-    await option.click();
-  }
-
-  // ======================
-  // ASSERTIONS
-  // ======================
-  getPostRow(title: string) {
-    return this.frame.locator(`tr:has-text("${title}")`);
-  }
-
-  async expectPostCreated(title: string) {
-    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
-  }
-
-  async expectCreateSuccess(title: string) {
-    const shortTitle = title.slice(0, 20);
-    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
-
-    await expect(row.first()).toBeVisible({ timeout: 5000 });
-  }
-
-  async expectCreateError() {
-    const errorMsg = this.frame.locator(".error, .invalid, .text-danger");
-
-    await expect(errorMsg).toBeVisible({ timeout: 5000 });
+    return row;
   }
 }

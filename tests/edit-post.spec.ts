@@ -7,20 +7,22 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      // Create post inline
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      // Track created post
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      // Open edit
-      await postPage.openEdit(title);
-      await expect(postPage.titleInput).toBeVisible();
+      await test.step("Open edit form for the post", async () => {
+        await postPage.openEdit(title);
+        await expect(postPage.titleInput).toBeVisible();
+      });
     }
   );
 
@@ -31,20 +33,30 @@ test.describe("Edit Post - UI Validation", () => {
       const title = `Post ${Date.now()}`;
       const updated = `Updated ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.updateTitle(updated);
-      await postPage.clickSave();
+      await test.step("Open edit form for the post", async () => {
+        await postPage.openEdit(title);
+      });
 
-      await postPage.expectPostUpdated(updated);
+      await test.step("Update post title and save", async () => {
+        await postPage.updateTitle(updated);
+        await postPage.clickSave();
+      });
+
+      await test.step("Verify post title updated in UI", async () => {
+        await postPage.expectPostUpdated(updated);
+      });
     }
   );
 
@@ -55,18 +67,29 @@ test.describe("Edit Post - UI Validation", () => {
       const title = `Post ${Date.now()}`;
       const updatedDesc = `Updated Description ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.fillDescription(updatedDesc);
-      await postPage.clickSave();
+      await test.step("Open edit form and update description", async () => {
+        await postPage.openEdit(title);
+        await postPage.fillDescription(updatedDesc);
+        await postPage.clickSave();
+      });
+
+      await test.step("Verify updated description in UI", async () => {
+        // Optionally check description displayed
+        const row = await postPage.getRowByData(title);
+        await expect(row).toContainText("Updated");
+      });
     }
   );
 
@@ -78,22 +101,32 @@ test.describe("Edit Post - UI Validation", () => {
       const updatedTitle = `Updated ${Date.now()}`;
       const updatedDesc = `Updated Description ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.updateTitle(updatedTitle);
-      await postPage.fillDescription(updatedDesc);
-      await postPage.toggleActive(true);
+      await test.step("Open edit form", async () => {
+        await postPage.openEdit(title);
+      });
 
-      await postPage.clickSave();
-      await postPage.expectPostUpdated(updatedTitle);
+      await test.step("Update all fields and toggle active ON", async () => {
+        await postPage.updateTitle(updatedTitle);
+        await postPage.fillDescription(updatedDesc);
+        await postPage.toggleActive(true);
+        await postPage.clickSave();
+      });
+
+      await test.step("Verify post updated in UI", async () => {
+        await postPage.expectPostUpdated(updatedTitle);
+      });
     }
   );
 
@@ -103,20 +136,27 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.clearTitle();
-      await postPage.clickSave();
+      await test.step("Open edit form and clear title", async () => {
+        await postPage.openEdit(title);
+        await postPage.clearTitle();
+        await postPage.clickSave();
+      });
 
-      expect(await postPage.isTitleInvalid()).toBe(true);
+      await test.step("Verify validation error displayed", async () => {
+        expect(await postPage.isTitleInvalid()).toBe(true);
+      });
     }
   );
 
@@ -126,20 +166,27 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.toggleActive(true);
-      await postPage.clickSave();
+      await test.step("Open edit form and toggle active ON", async () => {
+        await postPage.openEdit(title);
+        await postPage.toggleActive(true);
+        await postPage.clickSave();
+      });
 
-      await postPage.expectPostUpdated(title);
+      await test.step("Verify post updated in UI", async () => {
+        await postPage.expectPostUpdated(title);
+      });
     }
   );
 
@@ -149,20 +196,27 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.toggleActive(false);
-      await postPage.clickSave();
+      await test.step("Open edit form and toggle active OFF", async () => {
+        await postPage.openEdit(title);
+        await postPage.toggleActive(false);
+        await postPage.clickSave();
+      });
 
-      await postPage.expectPostUpdated(title);
+      await test.step("Verify post updated in UI", async () => {
+        await postPage.expectPostUpdated(title);
+      });
     }
   );
 
@@ -173,21 +227,28 @@ test.describe("Edit Post - UI Validation", () => {
       const title = `Post ${Date.now()}`;
       const updated = "Should not save";
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.updateTitle(updated);
-      await postPage.clickCancel();
+      await test.step("Open edit form, change title and cancel", async () => {
+        await postPage.openEdit(title);
+        await postPage.updateTitle(updated);
+        await postPage.clickCancel();
+      });
 
-      await expect(postPage.getPostRow(updated)).toHaveCount(0);
-      await expect(postPage.getPostRow(title)).toBeVisible();
+      await test.step("Verify original title remains", async () => {
+        await expect(postPage.getPostRow(updated)).toHaveCount(0);
+        await expect(postPage.getPostRow(title)).toBeVisible();
+      });
     }
   );
 
@@ -197,19 +258,26 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.clickCloseModal();
+      await test.step("Open edit form and close modal", async () => {
+        await postPage.openEdit(title);
+        await postPage.clickCloseModal();
+      });
 
-      await expect(postPage.titleInput).toHaveCount(0);
+      await test.step("Verify modal closed", async () => {
+        await expect(postPage.titleInput).toHaveCount(0);
+      });
     }
   );
 
@@ -219,20 +287,27 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.updateTitle("Unsaved");
-      await postPage.clickCloseModal();
+      await test.step("Open edit form, make changes and close modal", async () => {
+        await postPage.openEdit(title);
+        await postPage.updateTitle("Unsaved");
+        await postPage.clickCloseModal();
+      });
 
-      await expect(postPage.getUnsavedWarning()).toBeVisible();
+      await test.step("Verify unsaved changes warning displayed", async () => {
+        await expect(postPage.getUnsavedWarning()).toBeVisible();
+      });
     }
   );
 
@@ -242,19 +317,26 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
-      await postPage.updateTitle("Changed");
+      await test.step("Open edit form and modify title", async () => {
+        await postPage.openEdit(title);
+        await postPage.updateTitle("Changed");
+      });
 
-      await postPage.expectSaveEnabled(true);
+      await test.step("Verify Save button enabled", async () => {
+        await postPage.expectSaveEnabled(true);
+      });
     }
   );
 
@@ -264,18 +346,25 @@ test.describe("Edit Post - UI Validation", () => {
     async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await postPage.goto();
-      await postPage.clickNew();
-      await postPage.fillTitle(title);
-      await postPage.clickCreate();
+      await test.step("Create a new post", async () => {
+        await postPage.goto();
+        await postPage.clickNew();
+        await postPage.fillTitle(title);
+        await postPage.clickCreate();
+      });
 
-      const posts = await postApi.list(`title="${title}"`);
-      const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
+      await test.step("Track created post for cleanup", async () => {
+        const createdPost = await postApi.list(`title="${title}"`);
+        if (createdPost.items?.[0]?.id) createdPostIds.push(createdPost.items[0].id);
+      });
 
-      await postPage.openEdit(title);
+      await test.step("Open edit form without changes", async () => {
+        await postPage.openEdit(title);
+      });
 
-      await postPage.expectSaveEnabled(false);
+      await test.step("Verify Save button disabled", async () => {
+        await postPage.expectSaveEnabled(false);
+      });
     }
   );
 });

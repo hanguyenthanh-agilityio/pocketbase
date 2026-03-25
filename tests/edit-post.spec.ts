@@ -1,25 +1,24 @@
 import { test, expect } from "../fixtures/fixture";
-import { createPostViaUI } from "../utils/post";
 
-test.describe("Edit Post", () => {
+test.describe("Edit Post - UI Validation", () => {
   test(
     "TC031 - Verify user can open edit form",
-    { tag: ["@smoke", "@ui", "@post", "@edit"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC031", "@smoke", "@ui", "@post", "@edit"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      // Create post first
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      // Create post inline
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
-      // Cleanup tracking
+      // Track created post
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
       if (id) createdPostIds.push(id);
 
+      // Open edit
       await postPage.openEdit(title);
       await expect(postPage.titleInput).toBeVisible();
     }
@@ -27,16 +26,15 @@ test.describe("Edit Post", () => {
 
   test(
     "TC032 - Verify user can update post title",
-    { tag: ["@smoke", "@ui", "@post", "@edit"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC032", "@smoke", "@ui", "@post", "@edit"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
       const updated = `Updated ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -52,40 +50,38 @@ test.describe("Edit Post", () => {
 
   test(
     "TC033 - Verify user can update post description",
-    { tag: ["@regression", "@ui", "@post"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC033", "@regression", "@ui", "@post"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
-      const updated = `Updated Description ${Date.now()}`;
+      const updatedDesc = `Updated Description ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
       if (id) createdPostIds.push(id);
 
       await postPage.openEdit(title);
-      await postPage.fillDescription(updated);
+      await postPage.fillDescription(updatedDesc);
       await postPage.clickSave();
     }
   );
 
   test(
     "TC034 - Verify user can update all post fields",
-    { tag: ["@regression", "@ui", "@post"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC034", "@regression", "@ui", "@post"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
       const updatedTitle = `Updated ${Date.now()}`;
       const updatedDesc = `Updated Description ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -95,7 +91,6 @@ test.describe("Edit Post", () => {
       await postPage.updateTitle(updatedTitle);
       await postPage.fillDescription(updatedDesc);
       await postPage.toggleActive(true);
-      await postPage.selectOption();
 
       await postPage.clickSave();
       await postPage.expectPostUpdated(updatedTitle);
@@ -104,15 +99,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC035 - Verify validation error when title is empty",
-    { tag: ["@regression", "@ui", "@validation"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC035", "@regression", "@ui", "@validation"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -128,15 +122,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC037 - Verify user can set Active status to ON",
-    { tag: ["@regression", "@ui", "@post"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC037", "@regression", "@ui", "@post"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -152,15 +145,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC038 - Verify user can set Active status to OFF",
-    { tag: ["@regression", "@ui", "@post"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC038", "@regression", "@ui", "@post"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -176,16 +168,15 @@ test.describe("Edit Post", () => {
 
   test(
     "TC041 - Verify changes are not saved when user cancels edit",
-    { tag: ["@regression", "@ui", "@negative"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC041", "@regression", "@ui", "@negative"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
       const updated = "Should not save";
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -202,15 +193,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC042 - Verify edit modal is closed when user clicks close button",
-    { tag: ["@regression", "@ui"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC042", "@regression", "@ui"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -225,15 +215,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC043 - Verify warning is shown when closing with unsaved changes",
-    { tag: ["@regression", "@ui"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC043", "@regression", "@ui"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -249,15 +238,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC044 - Verify Save button is enabled when form is changed",
-    { tag: ["@regression", "@ui"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC044", "@regression", "@ui"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;
@@ -272,15 +260,14 @@ test.describe("Edit Post", () => {
 
   test(
     "TC045 - Verify Save button is disabled when no changes are made",
-    { tag: ["@regression", "@ui"] },
-    async ({ postPage, page, postApi, createdPostIds }) => {
+    { tag: ["@TC045", "@regression", "@ui"] },
+    async ({ postPage, postApi, createdPostIds }) => {
       const title = `Post ${Date.now()}`;
 
-      await createPostViaUI(page, async () => {
-        await postPage.clickNew();
-        await postPage.fillTitle(title);
-        await postPage.clickCreate();
-      });
+      await postPage.goto();
+      await postPage.clickNew();
+      await postPage.fillTitle(title);
+      await postPage.clickCreate();
 
       const posts = await postApi.list(`title="${title}"`);
       const id = posts.items?.[0]?.id;

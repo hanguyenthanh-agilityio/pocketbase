@@ -3,7 +3,7 @@ import { test, expect } from "../fixtures/fixture";
 test.describe("Post API", () => {
   test(
     "TC012 - API - Verify create post with required fields only",
-    { tag: ["@smoke", "@api", "@post", "@create"] },
+    { tag: ["@TC012", "@smoke", "@api", "@post", "@create"] },
     async ({ postApi, createdPostIds }) => {
       const title = `API Required ${Date.now()}`;
       const { res, body } = await postApi.create({ title });
@@ -18,7 +18,7 @@ test.describe("Post API", () => {
 
   test(
     "TC013 - API - Create post with all fields",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC013", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { res, body } = await postApi.create({
         title: "API Full Post",
@@ -37,7 +37,7 @@ test.describe("Post API", () => {
 
   test(
     "TC014 - API - Verify title is required",
-    { tag: ["@regression", "@api", "@validation"] },
+    { tag: ["@TC014", "@regression", "@api", "@validation"] },
     async ({ postApi }) => {
       const { res } = await postApi.create({ title: "" });
       expect(res.status()).toBeGreaterThanOrEqual(400);
@@ -46,7 +46,7 @@ test.describe("Post API", () => {
 
   test(
     "TC015 - API - Verify title accepts special characters",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC015", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const title = "!!!Test@@@" + Date.now();
       const { res, body } = await postApi.create({ title });
@@ -60,7 +60,7 @@ test.describe("Post API", () => {
 
   test(
     "TC016 - API - Verify title max length validation",
-    { tag: ["@regression", "@api", "@validation"] },
+    { tag: ["@TC016", "@regression", "@api", "@validation"] },
     async ({ postApi, createdPostIds }) => {
       const longTitle = "A".repeat(500);
       const { res, body } = await postApi.create({ title: longTitle });
@@ -78,7 +78,7 @@ test.describe("Post API", () => {
 
   test(
     "TC017 - API - Verify description supports rich text",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC017", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { res, body } = await postApi.create({
         title: "Rich Text API",
@@ -94,7 +94,7 @@ test.describe("Post API", () => {
 
   test(
     "TC018 - API - Verify description long paragraph",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC018", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const desc = "Lorem ipsum ".repeat(200);
       const { res, body } = await postApi.create({
@@ -111,7 +111,7 @@ test.describe("Post API", () => {
 
   test(
     "TC019 - API - Verify active true",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC019", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { res, body } = await postApi.create({
         title: "Active True API",
@@ -127,7 +127,7 @@ test.describe("Post API", () => {
 
   test(
     "TC020 - API - Verify active false",
-    { tag: ["@regression", "@api", "@post"] },
+    { tag: ["@TC020", "@regression", "@api", "@post"] },
     async ({ postApi, createdPostIds }) => {
       const { res, body } = await postApi.create({
         title: "Active False API",
@@ -143,7 +143,7 @@ test.describe("Post API", () => {
 
   test(
     "TC021 - API - Verify unauthorized request",
-    { tag: ["@regression", "@api", "@negative"] },
+    { tag: ["@TC021", "@regression", "@api", "@negative"] },
     async ({ request }) => {
       const res = await request.post("/api/collections/posts/records", {
         headers: {

@@ -29,10 +29,10 @@ export class PostPage {
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
     // Navigation
-    this.postsMenu = this.frame.getByText("Posts");
+    this.postsMenu = this.frame.getByRole("link", { name: /posts/i });
 
     // Buttons
-    this.newBtn = this.frame.getByRole("button", { name: /New record/i });
+    this.newBtn = this.frame.locator("header").getByRole("button", { name: /New record/i });
     this.createBtn = this.frame.getByRole("button", { name: /Create/i });
     this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
     this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
@@ -146,20 +146,8 @@ export class PostPage {
   }
 
   async expectCreateError() {
-    const errorMsg = this.frame.getByText(/error|required|max/i);
+    const errorMsg = this.frame.locator(".error, .invalid, .text-danger");
 
     await expect(errorMsg).toBeVisible({ timeout: 5000 });
-  }
-
-  async expectCreateResult(title: string) {
-    const shortTitle = title.slice(0, 20);
-
-    const row = this.frame.locator(`tr:has-text("${shortTitle}")`);
-    const errorMsg = this.frame.getByText(/error|required|max/i);
-
-    await Promise.race([
-      row.first().waitFor({ state: "visible", timeout: 5000 }),
-      errorMsg.waitFor({ state: "visible", timeout: 5000 }),
-    ]);
   }
 }

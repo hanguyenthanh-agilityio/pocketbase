@@ -57,9 +57,13 @@ test.describe("Create Post - UI Validation", () => {
 
       const posts = await postApi.list(`title="${longTitle}"`);
       const id = posts.items?.[0]?.id;
-      if (id) createdPostIds.push(id);
 
-      await postPage.expectCreateResult(longTitle);
+      if (id) {
+        createdPostIds.push(id);
+        await postPage.expectCreateSuccess(longTitle);
+      } else {
+        await postPage.expectCreateError();
+      }
     }
   );
 

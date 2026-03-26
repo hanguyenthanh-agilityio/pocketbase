@@ -1,19 +1,22 @@
+// pages/post.page.ts
 import { Page, Locator, FrameLocator, expect } from "@playwright/test";
 
 export class PostPage {
   readonly page: Page;
   readonly frame: FrameLocator;
 
-  // Navigation
+  // ================= NAVIGATION =================
   readonly postsMenu: Locator;
 
   // Buttons
   readonly newBtn: Locator;
   readonly createBtn: Locator;
+  readonly saveBtn: Locator;
   readonly cancelBtn: Locator;
   readonly closeModalBtn: Locator;
+  readonly resetBtn: Locator;
 
-  // Fields
+  // ================= FIELDS =================
   readonly titleInput: Locator;
   readonly activeInput: Locator;
 
@@ -22,14 +25,14 @@ export class PostPage {
   readonly descriptionEditor: Locator;
 
   // Edit buttons
-  readonly saveBtn: Locator;
   readonly editBtn: Locator;
 
   // Delete
   readonly deleteBtn: Locator;
   readonly confirmDeleteBtn: Locator;
   readonly cancelDeleteBtn: Locator;
-  readonly resetBtn: Locator;
+
+  // ================= TABLE =================
   readonly selectedText: Locator;
 
   constructor(page: Page) {
@@ -51,6 +54,11 @@ export class PostPage {
     this.titleInput = this.frame.getByLabel(/title/i);
     this.activeInput = this.frame.getByLabel(/active/i);
 
+    // Rich text
+    this.descriptionEditor = this.frame
+      .frameLocator('iframe[title="Rich Text Area"]')
+      .locator("body");
+
     // Rich text editor iframe
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
     this.descriptionEditor = this.descriptionFrame.locator("body");
@@ -59,12 +67,15 @@ export class PostPage {
     this.saveBtn = this.frame.getByRole("button", { name: /save/i });
     this.editBtn = this.frame.getByRole("button", { name: /edit/i });
 
+    // Delete
     this.deleteBtn = this.frame.getByRole("button", { name: /delete selected/i });
     this.confirmDeleteBtn = this.frame.getByRole("button", { name: /^yes$/i });
     this.cancelDeleteBtn = this.frame.getByRole("button", { name: /^no$/i });
 
-    this.resetBtn = this.frame.getByText(/reset/i);
+    // Table
     this.selectedText = this.frame.getByText(/selected/i);
+
+    this.resetBtn = this.frame.getByText(/reset/i);
   }
 
   // ======================
@@ -137,75 +148,54 @@ export class PostPage {
   // ======================
   async openEdit(title: string) {
     const row = this.getPostRow(title);
-
-    await row.waitFor({ state: "visible" });
-
+    await expect(row).toBeVisible({ timeout: 5000 });
     await row.click();
-
-    await this.titleInput.waitFor({ state: "visible" });
-
+    await expect(this.titleInput).toBeVisible({ timeout: 5000 });
     await expect(this.saveBtn).toBeVisible();
   }
 
-  // Click Save
-  async clickSave() {
-    await this.saveBtn.click({ force: true });
-  }
-
-  // Update title
   async updateTitle(title: string) {
-    await this.titleInput.fill("");
     await this.titleInput.fill(title);
   }
 
-  // Clear title (for validation test)
-  async clearTitle() {
-    await this.titleInput.fill("");
+  async clickSave() {
+    await this.saveBtn.click();
   }
 
-  // Expect updated
   async expectPostUpdated(title: string) {
-    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
-  }
-
-  // Unsaved changes warning
-  getUnsavedWarning() {
-    return this.frame.getByText(/unsaved/i);
-  }
-
-  // Save button state
-  async expectSaveEnabled(enabled: boolean) {
-    if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
-    else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
+    await expect(this.getPostRow(title)).toBeVisible();
   }
 
   async isTitleInvalid() {
     return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
   }
 
+  async expectSaveEnabled(enabled: boolean) {
+    if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
+    else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
+  }
+
+  getUnsavedWarning() {
+    return this.frame.getByText(/unsaved/i);
+  }
+
+  // ================= DELETE =================
   async selectPost(title: string) {
     const row = this.getPostRow(title);
-
-    await row.waitFor({ state: "visible" });
-
+    await expect(row).toBeVisible({ timeout: 5000 });
     const checkbox = row.locator("label");
-
     await checkbox.click();
   }
 
   async selectMultiple(titles: string[]) {
-    for (const t of titles) {
-      await this.selectPost(t);
-    }
+    for (const title of titles) await this.selectPost(title);
   }
 
   async clickDelete() {
-    await this.deleteBtn.waitFor({ state: "visible" });
     await this.deleteBtn.click();
   }
 
   async confirmDelete() {
-    await this.confirmDeleteBtn.waitFor({ state: "visible" });
     await this.confirmDeleteBtn.click();
   }
 
@@ -213,27 +203,88 @@ export class PostPage {
     await this.cancelDeleteBtn.click();
   }
 
+  async expectPostDeleted(title: string) {
+    await expect(this.getPostRow(title)).toHaveCount(0, { timeout: 5000 });
+  }
+
   async resetSelection() {
     await this.resetBtn.click();
   }
 
-  async expectPostDeleted(title: string) {
-    await expect(this.getPostRow(title)).toHaveCount(0);
+  async expectSelectedCount(count: number) {
+    const counter = this.frame.locator("div.records-counter > span.txt").nth(1);
+    await expect(counter).toHaveText(`${count}`);
   }
 
-  async expectSelectedCount(count: number) {
-    if (count === 0) {
-      await expect(this.selectedText).toHaveCount(0);
+  // ================= SORT =================
+  async sortBy(column: string, direction: "asc" | "desc" = "asc") {
+    const header = this.frame
+      .getByRole("columnheader")
+      .filter({ hasText: new RegExp(column, "i") })
+      .first();
+
+    await header.click(); // ASC
+    await header.click(); // DESC
+    await header.click(); // NONE
+
+    if (direction === "asc") {
+      await header.click(); // ASC
     } else {
-      await expect(this.selectedText).toContainText(`${count}`);
+      await header.click(); // ASC
+      await header.click(); // DESC
     }
   }
 
-  getDeleteSuccessToast() {
-    return this.frame.getByText(/successfully deleted/i);
+  async getColumnTexts(index: number) {
+    const rows = this.frame.locator("tbody tr");
+
+    const count = await rows.count();
+    const result: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const cell = rows.nth(i).locator(`td:nth-child(${index})`);
+
+      if (await cell.count()) {
+        const text = (await cell.textContent())?.trim();
+        if (text) result.push(text);
+      }
+    }
+
+    return result;
   }
 
-  async expectNoSelection() {
-    await expect(this.selectedText).toHaveCount(0);
+  async expectSortedAsc(values: string[]) {
+    for (let i = 0; i < values.length - 1; i++)
+      expect(values[i].localeCompare(values[i + 1]) <= 0).toBeTruthy();
+  }
+
+  async expectSortedDesc(values: string[]) {
+    for (let i = 0; i < values.length - 1; i++)
+      expect(values[i].localeCompare(values[i + 1]) >= 0).toBeTruthy();
+  }
+
+  // ================= SEARCH =================
+  async waitForTableLoaded() {
+    await this.frame.locator("tbody tr").first().waitFor({ state: "visible", timeout: 10000 });
+  }
+
+  async searchPost(keyword: string) {
+    const searchInput = this.frame.locator("form.searchbar .cm-editor [role='textbox']");
+    await searchInput.waitFor({ state: "visible", timeout: 15000 });
+    await searchInput.fill(keyword);
+    await searchInput.press("Enter");
+    await this.waitForTableLoaded();
+  }
+
+  async clearSearch() {
+    const clearBtn = this.frame.locator('button:has-text("Clear")');
+    if (await clearBtn.isVisible()) {
+      await clearBtn.click();
+    } else {
+      const searchInput = this.frame.locator("form.searchbar .cm-editor [role='textbox']");
+      await searchInput.fill("");
+      await searchInput.press("Enter");
+    }
+    await this.waitForTableLoaded();
   }
 }

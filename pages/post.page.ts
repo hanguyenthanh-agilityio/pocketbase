@@ -278,28 +278,7 @@ export class PostPage {
       expect(values[i].localeCompare(values[i + 1]) >= 0).toBeTruthy();
   }
 
-  // ================= SEARCH =================
   async waitForTableLoaded() {
     await this.frame.locator("tbody tr").first().waitFor({ state: "visible", timeout: 10000 });
-  }
-
-  async searchPost(keyword: string) {
-    const searchInput = this.frame.locator("form.searchbar .cm-editor [role='textbox']");
-    await searchInput.waitFor({ state: "visible", timeout: 15000 });
-    await searchInput.fill(keyword);
-    await searchInput.press("Enter");
-    await this.waitForTableLoaded();
-  }
-
-  async clearSearch() {
-    const clearBtn = this.frame.locator('button:has-text("Clear")');
-    if (await clearBtn.isVisible()) {
-      await clearBtn.click();
-    } else {
-      const searchInput = this.frame.locator("form.searchbar .cm-editor [role='textbox']");
-      await searchInput.fill("");
-      await searchInput.press("Enter");
-    }
-    await this.waitForTableLoaded();
   }
 }

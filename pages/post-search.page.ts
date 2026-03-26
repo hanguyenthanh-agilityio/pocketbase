@@ -6,7 +6,6 @@ export class PostSearchPage extends PostPage {
     super(page);
   }
 
-  // ================= SEARCH ACTIONS =================
   async search(keyword: string) {
     const input = this.frame.locator("form.searchbar .cm-editor [role='textbox']");
     await input.waitFor({ state: "visible", timeout: 15000 });

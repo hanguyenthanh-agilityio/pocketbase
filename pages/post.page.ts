@@ -7,7 +7,7 @@ export class PostPage {
   // Navigation
   readonly postsMenu: Locator;
 
-  // Actions
+  // Buttons
   readonly newBtn: Locator;
   readonly createBtn: Locator;
   readonly cancelBtn: Locator;
@@ -17,10 +17,13 @@ export class PostPage {
   // Fields
   readonly titleInput: Locator;
   readonly activeInput: Locator;
-  readonly selectDropdown: Locator;
 
-  // Rich text
+  // Rich text editor iframe
+  readonly descriptionFrame: FrameLocator;
   readonly descriptionEditor: Locator;
+
+  // Edit buttons
+  readonly editBtn: Locator;
 
   // Delete
   readonly deleteBtn: Locator;
@@ -34,27 +37,34 @@ export class PostPage {
   constructor(page: Page) {
     this.page = page;
 
+    // Main iframe
     this.frame = page.frameLocator('iframe[title="Demo dashboard"]');
 
     // Navigation
-    this.postsMenu = this.frame.getByText(/posts/i);
+    this.postsMenu = this.frame.getByRole("link", { name: /posts/i });
 
-    // Actions
-    this.newBtn = this.frame.getByRole("button", { name: /new record/i });
-    this.createBtn = this.frame.getByRole("button", { name: /create/i });
-    this.cancelBtn = this.frame.getByRole("button", { name: /cancel/i });
-    this.closeModalBtn = this.frame.getByRole("button", { name: /close/i });
-    this.saveBtn = this.frame.getByRole("button", { name: /save/i });
+    // Buttons
+    this.newBtn = this.frame.locator("header").getByRole("button", { name: /New record/i });
+    this.createBtn = this.frame.getByRole("button", { name: /^Create$/i });
+    this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
+    this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
 
     // Fields
     this.titleInput = this.frame.getByLabel(/title/i);
     this.activeInput = this.frame.getByLabel(/active/i);
-    this.selectDropdown = this.frame.getByRole("button", { name: /select/i });
 
     // Rich text
     this.descriptionEditor = this.frame
       .frameLocator('iframe[title="Rich Text Area"]')
       .locator("body");
+
+    // Rich text editor iframe
+    this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
+    this.descriptionEditor = this.descriptionFrame.locator("body");
+
+    // Edit
+    this.saveBtn = this.frame.getByRole("button", { name: /save/i });
+    this.editBtn = this.frame.getByRole("button", { name: /edit/i });
 
     // Delete
     this.deleteBtn = this.frame.getByRole("button", { name: /delete selected/i });
@@ -66,17 +76,24 @@ export class PostPage {
     this.selectedText = this.frame.getByText(/selected/i);
   }
 
-  // ================= NAVIGATION =================
+  // ======================
+  // NAVIGATION
+  // ======================
   async goto() {
     await this.page.goto("/demo/");
-    await expect(this.postsMenu).toBeVisible();
-    await this.postsMenu.click();
-    await expect(this.newBtn).toBeVisible();
+    const iframe = this.page.locator('iframe[title="Demo dashboard"]');
+    await expect(iframe).toBeVisible();
+    await this.postsMenu.waitFor({ state: "visible" });
+    await this.page.waitForLoadState("networkidle");
+    await this.postsMenu.first().click();
+    await expect(this.newBtn).toBeVisible({ timeout: 15000 });
   }
 
-  // ================= CREATE =================
+  // ======================
+  // ACTIONS - CREATE
+  // ======================
   async clickNew() {
-    await this.newBtn.click();
+    await this.newBtn.first().click();
     await expect(this.titleInput).toBeVisible();
   }
 
@@ -85,21 +102,17 @@ export class PostPage {
   }
 
   async fillDescription(desc: string) {
+    if ((await this.descriptionEditor.count()) === 0) return;
     await this.descriptionEditor.click();
     await this.descriptionEditor.fill(desc);
   }
 
   async toggleActive(active: boolean) {
+    const label = this.frame.locator("label", { hasText: /active/i });
+    await expect(label).toBeVisible();
     const checked = await this.activeInput.isChecked();
     if (checked !== active) {
-      await this.activeInput.click();
-    }
-  }
-
-  async selectOption() {
-    if (await this.selectDropdown.isVisible()) {
-      await this.selectDropdown.click();
-      await this.frame.getByRole("menuitem").first().click();
+      await label.click();
     }
   }
 
@@ -107,22 +120,30 @@ export class PostPage {
     await this.createBtn.click();
   }
 
-  async expectPostCreated(title: string) {
-    await expect(this.getPostRow(title)).toBeVisible();
+  async clickCancel() {
+    await this.cancelBtn.click();
   }
 
-  async expectCreateResult(title: string) {
-    const row = this.getPostRow(title);
-    const errorMsg = this.frame.getByText(/failed to create/i);
-
-    await Promise.race([expect(row).toBeVisible(), expect(errorMsg).toBeVisible()]);
+  async clickCloseModal() {
+    await this.closeModalBtn.click();
   }
 
-  // ================= EDIT =================
+  // ======================
+  // ROW HELPERS
+  // ======================
+  getRowByData(title: string, description?: string) {
+    let row = this.frame.locator("tr", { hasText: title });
+    if (description) row = row.filter({ hasText: description });
+    return row;
+  }
+
   getPostRow(title: string) {
-    return this.frame.locator("tbody tr").filter({ hasText: title });
+    return this.getRowByData(title).first();
   }
 
+  // ======================
+  // ACTIONS - EDIT
+  // ======================
   async openEdit(title: string) {
     const row = this.getPostRow(title);
     await expect(row).toBeVisible();
@@ -145,14 +166,6 @@ export class PostPage {
     await this.saveBtn.click();
   }
 
-  async clickCancel() {
-    await this.cancelBtn.click();
-  }
-
-  async clickCloseModal() {
-    await this.closeModalBtn.click();
-  }
-
   async expectPostUpdated(title: string) {
     await expect(this.getPostRow(title)).toBeVisible();
   }
@@ -162,11 +175,8 @@ export class PostPage {
   }
 
   async expectSaveEnabled(enabled: boolean) {
-    if (enabled) {
-      await expect(this.saveBtn).toBeEnabled();
-    } else {
-      await expect(this.saveBtn).toBeDisabled();
-    }
+    if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
+    else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
   }
 
   getUnsavedWarning() {
@@ -225,18 +235,40 @@ export class PostPage {
   }
 
   // ================= SORT =================
-  async sortBy(column: string) {
-    await this.frame
+  async sortBy(column: string, direction: "asc" | "desc" = "asc") {
+    const header = this.frame
       .getByRole("columnheader")
       .filter({ hasText: new RegExp(column, "i") })
-      .first()
-      .click();
+      .first();
+
+    await header.click(); // ASC
+    await header.click(); // DESC
+    await header.click(); // NONE
+
+    if (direction === "asc") {
+      await header.click(); // ASC
+    } else {
+      await header.click(); // ASC
+      await header.click(); // DESC
+    }
   }
 
   async getColumnTexts(index: number) {
-    const texts = await this.frame.locator(`tbody tr td:nth-child(${index})`).allTextContents();
+    const rows = this.frame.locator("tbody tr");
 
-    return texts.map((t) => t.trim());
+    const count = await rows.count();
+    const result: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const cell = rows.nth(i).locator(`td:nth-child(${index})`);
+
+      if (await cell.count()) {
+        const text = (await cell.textContent())?.trim();
+        if (text) result.push(text);
+      }
+    }
+
+    return result;
   }
 
   async waitForTableLoaded() {

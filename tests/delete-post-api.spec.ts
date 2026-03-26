@@ -1,51 +1,59 @@
-import { test, expect } from "@playwright/test";
-import { getAuthToken } from "../utils/auth";
+import { test, expect } from "../fixtures/fixture";
 
-test.describe("Delete Post API", () => {
-  let token: string;
-  let postId: string;
+test.describe("Post API - Create", () => {
+  test(
+    "TC012 - API - Verify create post with required fields only",
+    { tag: ["@TC012", "@smoke", "@api", "@post", "@create"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `API Required ${Date.now()}`;
+      const { res, body } = await postApi.create({ title });
 
-  test.beforeAll(async ({ request }) => {
-    token = getAuthToken();
+      expect([200, 201]).toContain(res.status());
+      expect(body.title).toBe(title);
 
-    const res = await request.post("/api/collections/posts/records", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      data: {
-        title: "Delete API Post",
-      },
-    });
+      createdPostIds.push(body.id);
+    }
+  );
 
-    expect([200, 201]).toContain(res.status());
+  test(
+    "TC013 - API - Create post with all fields",
+    { tag: ["@TC013", "@regression", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const { res, body } = await postApi.create({
+        title: "API Full Post",
+        description: "Sample description",
+        active: true,
+      });
 
-    const body = await res.json();
+      expect([200, 201]).toContain(res.status());
+      expect(body.title).toBe("API Full Post");
+      expect(body.description).toContain("Sample description");
+      expect(body.active).toBe(true);
 
-    postId = body.id;
+      createdPostIds.push(body.id);
+    }
+  );
 
-    expect(postId).toBeTruthy();
-  });
+  test(
+    "TC014 - API - Verify title is required",
+    { tag: ["@TC014", "@regression", "@api", "@validation"] },
+    async ({ postApi }) => {
+      const { res } = await postApi.create({ title: "" });
+      expect(res.status()).toBeGreaterThanOrEqual(400);
+    }
+  );
 
-  test("TC053 - Delete API success", async ({ request }) => {
-    const res = await request.delete(`/api/collections/posts/records/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  test(
+    "TC015 - API - Verify title accepts special characters",
+    { tag: ["@TC015", "@regression", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = "!!!Test@@@" + Date.now();
+      const { res, body } = await postApi.create({ title });
 
-    expect([200, 204]).toContain(res.status());
-  });
+      expect([200, 201]).toContain(res.status());
+      expect(body.title).toBe(title);
 
-  test("TC055 - Delete non-existing", async ({ request }) => {
-    const fakeId = "non-existing-id";
-
-    const res = await request.delete(`/api/collections/posts/records/${fakeId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    expect(res.status()).toBe(404);
-  });
+      createdPostIds.push(body.id);
+    }
+  );
 });

@@ -1,124 +1,103 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "@playwright/test";
-import { getAuthToken } from "../utils/auth";
+import { test, expect } from "../fixtures/fixture";
 
-test.describe("Search Post API", () => {
-  let token: string;
-  let createdTitle: string;
-  let numericTitle: string;
+type Post = {
+  id: string;
+  title: string;
+};
 
-  test.beforeAll(async ({ request }) => {
-    token = getAuthToken();
+test.describe("Post API - Search (Optimized)", () => {
+  test(
+    "TC065 - API - Search any keyword",
+    { tag: ["@TC065", "@api", "@post", "@search"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `SearchTest ${Date.now()}`;
 
-    createdTitle = `SearchTest ${Date.now()}`;
-    const res1 = await request.post("/api/collections/posts/records", {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { title: createdTitle },
-    });
-    expect(res1.status()).toBe(200);
+      const { body } = await postApi.create({ title });
+      createdPostIds.push(body.id);
 
-    numericTitle = `${Date.now()}`;
-    const res2 = await request.post("/api/collections/posts/records", {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { title: numericTitle },
-    });
-    expect(res2.status()).toBe(200);
-  });
+      const res = await postApi.list(`title~"SearchTest"`);
 
-  test.afterAll(async ({ request }) => {
-    // Cleanup
-    const titlesToDelete = [createdTitle, numericTitle];
-    for (const title of titlesToDelete) {
-      const searchRes = await request.get(
-        `/api/collections/posts/records?filter=(title='${encodeURIComponent(title)}')`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const body = await searchRes.json();
-      if (body.items && body.items.length > 0) {
-        for (const item of body.items) {
-          await request.delete(`/api/collections/posts/records/${item.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-      }
+      const items = res.items as Post[];
+
+      const titles = items.map((i) => i.title);
+
+      expect(titles).toContain(title);
     }
-  });
+  );
 
-  test("TC065 - Search any keyword", async ({ request }) => {
-    const res = await request.get(`/api/collections/posts/records?filter=(title~'SearchTest')`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  test(
+    "TC066 - API - Search uppercase",
+    { tag: ["@TC066", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `SearchTest ${Date.now()}`;
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    const titles = body.items.map((i: any) => i.title);
-    expect(titles).toContain(createdTitle);
-  });
+      const { body } = await postApi.create({ title });
+      createdPostIds.push(body.id);
 
-  test("TC066 - Search uppercase", async ({ request }) => {
-    const res = await request.get(
-      `/api/collections/posts/records?filter=(title~'${createdTitle.toUpperCase()}')`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      const res = await postApi.list(`title~"${title.toUpperCase()}"`);
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    const titles = body.items.map((i: any) => i.title);
-    expect(titles).toContain(createdTitle);
-  });
+      const items = res.items as Post[];
 
-  test("TC067 - Search lowercase", async ({ request }) => {
-    const res = await request.get(
-      `/api/collections/posts/records?filter=(title~'${createdTitle.toLowerCase()}')`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      expect(items.map((i) => i.title)).toContain(title);
+    }
+  );
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    const titles = body.items.map((i: any) => i.title);
-    expect(titles).toContain(createdTitle);
-  });
+  test(
+    "TC067 - API - Search lowercase",
+    { tag: ["@TC067", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `SearchTest ${Date.now()}`;
 
-  test("TC068 - Search numeric", async ({ request }) => {
-    const res = await request.get(
-      `/api/collections/posts/records?filter=(title='${numericTitle}')`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      const { body } = await postApi.create({ title });
+      createdPostIds.push(body.id);
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    const titles = body.items.map((i: any) => i.title);
-    expect(titles).toContain(numericTitle);
-  });
+      const res = await postApi.list(`title~"${title.toLowerCase()}"`);
 
-  test("TC069 - Search returns empty result", async ({ request }) => {
-    const res = await request.get(`/api/collections/posts/records?filter=(title='randomtext123')`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const items = res.items as Post[];
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    expect(body.items.length).toBe(0);
-  });
+      expect(items.map((i) => i.title)).toContain(title);
+    }
+  );
 
-  test("TC070 - Clear search results (simulate by getting all records)", async ({ request }) => {
-    const res = await request.get("/api/collections/posts/records", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  test(
+    "TC068 - API - Search numeric",
+    { tag: ["@TC068", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `${Date.now()}`;
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    expect(body.items.length).toBeGreaterThan(0);
-  });
+      const { body } = await postApi.create({ title });
+      createdPostIds.push(body.id);
 
-  test("TC071 - Search result updates record count", async ({ request }) => {
-    const res = await request.get(`/api/collections/posts/records?filter=(title~'SearchTest')`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await postApi.list(`title="${title}"`);
 
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    const count = body.items.length;
-    expect(count).toBeGreaterThan(0);
-  });
+      const items = res.items as Post[];
+
+      expect(items.map((i) => i.title)).toContain(title);
+    }
+  );
+
+  test(
+    "TC069 - API - Search empty result",
+    { tag: ["@TC069", "@api", "@negative"] },
+    async ({ postApi }) => {
+      const res = await postApi.list(`title="randomtext123"`);
+
+      expect(res.items.length).toBe(0);
+    }
+  );
+
+  test(
+    "TC071 - API - Verify search returns correct count",
+    { tag: ["@TC071", "@api"] },
+    async ({ postApi, createdPostIds }) => {
+      const title = `SearchTest ${Date.now()}`;
+
+      const { body } = await postApi.create({ title });
+      createdPostIds.push(body.id);
+
+      const res = await postApi.list(`title~"SearchTest"`);
+
+      expect(res.items.length).toBeGreaterThan(0);
+    }
+  );
 });

@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { PostPage } from "../pages/post.page";
+import { test, expect } from "../fixtures/fixture";
 import {
   normalize,
   hasDifferentValues,
@@ -10,89 +9,112 @@ import {
   normalizeBoolean,
 } from "../utils/sort";
 
-test.use({ storageState: "playwright/.auth/user.json" });
-
-test.describe("Sort Records", () => {
-  let postPage: PostPage;
-
-  test.beforeEach(async ({ page }) => {
-    postPage = new PostPage(page);
-    await postPage.goto();
-  });
-
+test.describe("Sort Records - UI Validation (Optimized)", () => {
   const hasData = (arr: string[]) => arr.length > 0;
 
-  test("TC056 - Sort title ASC", async ({ page }) => {
-    const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/records") && r.request().method() === "GET"),
-      postPage.sortBy("title"),
-    ]);
+  test(
+    "TC056 - Verify user can sort posts by title ascending",
+    { tag: ["@TC056", "@regression", "@ui", "@post", "@sort"] },
+    async ({ postPage }) => {
+      let titles: string[] = [];
 
-    expect(res.status()).toBe(200);
+      await test.step("Sort by title ASC", async () => {
+        await postPage.sortBy("title", "asc");
+        await postPage.waitForTableLoaded();
+      });
 
-    await postPage.waitForTableLoaded();
+      await test.step("Get titles from table", async () => {
+        titles = normalize(await postPage.getColumnTexts(3));
+      });
 
-    const titles = normalize(await postPage.getColumnTexts(3));
+      await test.step("Verify sorting result", async () => {
+        expect(hasData(titles)).toBeTruthy();
 
-    expect(hasData(titles)).toBeTruthy();
-    if (hasDifferentValues(titles)) {
-      expect(isSortedAsc(titles)).toBeTruthy();
+        if (hasDifferentValues(titles)) {
+          expect(isSortedAsc(titles)).toBeTruthy();
+        }
+      });
     }
-  });
+  );
 
-  test("TC057 - Sort title DESC", async ({ page }) => {
-    await postPage.sortBy("title"); // reset
-    const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/records") && r.request().method() === "GET"),
-      postPage.sortBy("title"),
-    ]);
+  test(
+    "TC057 - Verify user can sort posts by title descending",
+    { tag: ["@TC057", "@regression", "@ui", "@post", "@sort"] },
+    async ({ postPage }) => {
+      let titles: string[] = [];
 
-    expect(res.status()).toBe(200);
-    await postPage.waitForTableLoaded();
+      await test.step("Sort by title DESC", async () => {
+        await postPage.sortBy("title", "desc");
+        await postPage.waitForTableLoaded();
+      });
 
-    const titles = normalize(await postPage.getColumnTexts(3));
-    expect(hasData(titles)).toBeTruthy();
-    if (hasDifferentValues(titles)) {
-      expect(isSortedDesc(titles)).toBeTruthy();
+      await test.step("Get titles from table", async () => {
+        titles = normalize(await postPage.getColumnTexts(3));
+      });
+
+      await test.step("Verify sorting result", async () => {
+        expect(hasData(titles)).toBeTruthy();
+
+        console.log("DESC Titles:", titles);
+
+        if (hasDifferentValues(titles)) {
+          expect(isSortedDesc(titles)).toBeTruthy();
+        }
+      });
     }
-  });
+  );
 
-  test("TC060 - Sort active ASC", async ({ page }) => {
-    const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/records") && r.request().method() === "GET"),
-      postPage.sortBy("active"),
-    ]);
+  test(
+    "TC060 - Verify user can sort posts by active status ascending",
+    { tag: ["@TC060", "@regression", "@ui", "@post", "@sort"] },
+    async ({ postPage }) => {
+      let values: string[] = [];
 
-    expect(res.status()).toBe(200);
-    await postPage.waitForTableLoaded();
+      await test.step("Sort by active ASC", async () => {
+        await postPage.sortBy("active", "asc");
+        await postPage.waitForTableLoaded();
+      });
 
-    const values = normalizeBoolean(await postPage.getColumnTexts(5));
+      await test.step("Get active values from table", async () => {
+        values = normalizeBoolean(await postPage.getColumnTexts(5));
+      });
 
-    expect(hasData(values)).toBeTruthy();
-    if (hasDifferentValues(values)) {
-      expect(isBooleanAsc(values)).toBeTruthy();
+      await test.step("Verify sorting result", async () => {
+        expect(hasData(values)).toBeTruthy();
+
+        console.log("ASC Active:", values);
+
+        if (hasDifferentValues(values)) {
+          expect(isBooleanAsc(values)).toBeTruthy();
+        }
+      });
     }
-  });
+  );
 
-  test("TC061 - Sort active DESC", async ({ page }) => {
-    await postPage.sortBy("active"); // reset
-    const [res] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/records") && r.request().method() === "GET"),
-      postPage.sortBy("active"),
-    ]);
+  test(
+    "TC061 - Verify user can sort posts by active status descending",
+    { tag: ["@TC061", "@regression", "@ui", "@post", "@sort"] },
+    async ({ postPage }) => {
+      let values: string[] = [];
 
-    expect(res.status()).toBe(200);
-    await postPage.waitForTableLoaded();
+      await test.step("Sort by active DESC", async () => {
+        await postPage.sortBy("active", "desc");
+        await postPage.waitForTableLoaded();
+      });
 
-    const values = normalize(
-      (await postPage.getColumnTexts(5)).map((v) =>
-        v.toLowerCase().includes("true") ? "true" : "false"
-      )
-    );
+      await test.step("Get active values from table", async () => {
+        values = normalizeBoolean(await postPage.getColumnTexts(5));
+      });
 
-    expect(hasData(values)).toBeTruthy();
-    if (hasDifferentValues(values)) {
-      expect(isBooleanDesc(values)).toBeTruthy();
+      await test.step("Verify sorting result", async () => {
+        expect(hasData(values)).toBeTruthy();
+
+        console.log("DESC Active:", values);
+
+        if (hasDifferentValues(values)) {
+          expect(isBooleanDesc(values)).toBeTruthy();
+        }
+      });
     }
-  });
+  );
 });

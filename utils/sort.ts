@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const normalize = (arr: any[]) =>
-  arr
-    .map((v) => (v === null || v === undefined ? "" : String(v).trim().toLowerCase()))
-    .filter(Boolean);
+export const normalize = (arr: unknown[]) =>
+  arr.map((v) => (v === null || v === undefined ? "" : String(v).trim().toLowerCase()));
 
 export const hasDifferentValues = (arr: string[]) => new Set(arr).size > 1;
 

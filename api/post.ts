@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { APIRequestContext } from "@playwright/test";
+
+export interface PostData {
+  id: string;
+  title: string;
+  description?: string;
+  active?: boolean;
+}
+
 export class PostAPI {
   constructor(
-    private request: any,
+    private request: APIRequestContext,
     private token: string
   ) {}
 
@@ -9,44 +18,31 @@ export class PostAPI {
     return { Authorization: `Bearer ${this.token}` };
   }
 
-  async create(data: any) {
+  async create(data: any): Promise<PostData> {
     const res = await this.request.post("/api/collections/posts/records", {
       headers: this.headers(),
       data,
     });
-    const body = await res.json();
-    return { res, body };
+    return await res.json();
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: any): Promise<PostData> {
     const res = await this.request.patch(`/api/collections/posts/records/${id}`, {
       headers: this.headers(),
       data,
     });
-
-    let body;
-    try {
-      body = await res.json();
-    } catch {
-      body = null;
-    }
-
-    return { res, body };
+    return await res.json();
   }
 
   async delete(id: string) {
     const res = await this.request.delete(`/api/collections/posts/records/${id}`, {
       headers: this.headers(),
     });
-
-    let body;
     try {
-      body = await res.json();
+      return await res.json();
     } catch {
-      body = null;
+      return null;
     }
-
-    return { res, body };
   }
 
   async safeDelete(id: string, retries = 3) {
@@ -61,25 +57,19 @@ export class PostAPI {
     }
   }
 
-  async list(filter?: string) {
+  async list(filter?: string): Promise<PostData[]> {
     const url = filter
       ? `/api/collections/posts/records?filter=${encodeURIComponent(filter)}`
       : "/api/collections/posts/records";
     const res = await this.request.get(url, { headers: this.headers() });
     const body = await res.json();
-    return body;
+    return body.items as PostData[];
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<PostData> {
     const res = await this.request.get(`/api/collections/posts/records/${id}`, {
       headers: this.headers(),
     });
-    let body;
-    try {
-      body = await res.json();
-    } catch {
-      body = null;
-    }
-    return { res, body };
+    return await res.json();
   }
 }

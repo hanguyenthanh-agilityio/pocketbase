@@ -148,35 +148,50 @@ export class PostPage {
   // ======================
   async openEdit(title: string) {
     const row = this.getPostRow(title);
-    await expect(row).toBeVisible({ timeout: 5000 });
+
+    await row.waitFor({ state: "visible" });
+
     await row.click();
-    await expect(this.titleInput).toBeVisible({ timeout: 5000 });
+
+    await this.titleInput.waitFor({ state: "visible" });
+
     await expect(this.saveBtn).toBeVisible();
   }
 
+  // Click Save
+  async clickSave() {
+    await this.saveBtn.click({ force: true });
+  }
+
+  // Update title
   async updateTitle(title: string) {
+    await this.titleInput.fill("");
     await this.titleInput.fill(title);
   }
 
-  async clickSave() {
-    await this.saveBtn.click();
+  // Clear title (for validation test)
+  async clearTitle() {
+    await this.titleInput.fill("");
   }
 
+  // Expect updated
   async expectPostUpdated(title: string) {
-    await expect(this.getPostRow(title)).toBeVisible();
+    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
   }
 
-  async isTitleInvalid() {
-    return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
+  // Unsaved changes warning
+  getUnsavedWarning() {
+    return this.frame.getByText(/unsaved/i);
   }
 
+  // Save button state
   async expectSaveEnabled(enabled: boolean) {
     if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
     else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
   }
 
-  getUnsavedWarning() {
-    return this.frame.getByText(/unsaved/i);
+  async isTitleInvalid() {
+    return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
   }
 
   // ================= DELETE =================

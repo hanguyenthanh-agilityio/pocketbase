@@ -7,7 +7,7 @@ export class PostPage {
   // Navigation
   readonly postsMenu: Locator;
 
-  // Actions
+  // Buttons
   readonly newBtn: Locator;
   readonly createBtn: Locator;
   readonly cancelBtn: Locator;
@@ -17,9 +17,20 @@ export class PostPage {
   readonly titleInput: Locator;
   readonly activeInput: Locator;
 
-  // Rich text iframe
+  // Rich text editor iframe
   readonly descriptionFrame: FrameLocator;
   readonly descriptionEditor: Locator;
+
+  // Edit buttons
+  readonly saveBtn: Locator;
+  readonly editBtn: Locator;
+
+  // Delete
+  readonly deleteBtn: Locator;
+  readonly confirmDeleteBtn: Locator;
+  readonly cancelDeleteBtn: Locator;
+  readonly resetBtn: Locator;
+  readonly selectedText: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -32,7 +43,6 @@ export class PostPage {
 
     // Buttons
     this.newBtn = this.frame.locator("header").getByRole("button", { name: /New record/i });
-
     this.createBtn = this.frame.getByRole("button", { name: /^Create$/i });
     this.cancelBtn = this.frame.getByRole("button", { name: /Cancel/i });
     this.closeModalBtn = this.frame.getByRole("button", { name: /Close/i });
@@ -44,6 +54,17 @@ export class PostPage {
     // Rich text editor iframe
     this.descriptionFrame = this.frame.frameLocator('iframe[title="Rich Text Area"]');
     this.descriptionEditor = this.descriptionFrame.locator("body");
+
+    // Edit
+    this.saveBtn = this.frame.getByRole("button", { name: /save/i });
+    this.editBtn = this.frame.getByRole("button", { name: /edit/i });
+
+    this.deleteBtn = this.frame.getByRole("button", { name: /delete selected/i });
+    this.confirmDeleteBtn = this.frame.getByRole("button", { name: /^yes$/i });
+    this.cancelDeleteBtn = this.frame.getByRole("button", { name: /^no$/i });
+
+    this.resetBtn = this.frame.getByText(/reset/i);
+    this.selectedText = this.frame.getByText(/selected/i);
   }
 
   // ======================
@@ -51,24 +72,16 @@ export class PostPage {
   // ======================
   async goto() {
     await this.page.goto("/demo/");
-
     const iframe = this.page.locator('iframe[title="Demo dashboard"]');
-
-    // Wait iframe ready
     await expect(iframe).toBeVisible();
-
-    // Wait element inside iframe
     await this.postsMenu.waitFor({ state: "visible" });
-
     await this.page.waitForLoadState("networkidle");
-
     await this.postsMenu.first().click();
-
     await expect(this.newBtn).toBeVisible({ timeout: 15000 });
   }
 
   // ======================
-  // ACTIONS
+  // ACTIONS - CREATE
   // ======================
   async clickNew() {
     await this.newBtn.first().click();
@@ -80,24 +93,17 @@ export class PostPage {
   }
 
   async fillDescription(desc: string) {
-    if (!(await this.descriptionEditor.count())) return;
-
+    if ((await this.descriptionEditor.count()) === 0) return;
     await this.descriptionEditor.click();
     await this.descriptionEditor.fill(desc);
   }
 
   async toggleActive(active: boolean) {
-    const checkbox = this.activeInput;
-
-    // label clickable (UI visible)
     const label = this.frame.locator("label", { hasText: /active/i });
-
     await expect(label).toBeVisible();
-
-    const checked = await checkbox.isChecked();
-
+    const checked = await this.activeInput.isChecked();
     if (checked !== active) {
-      await label.click(); // Click label instead of input
+      await label.click();
     }
   }
 
@@ -113,13 +119,121 @@ export class PostPage {
     await this.closeModalBtn.click();
   }
 
+  // ======================
+  // ROW HELPERS
+  // ======================
   getRowByData(title: string, description?: string) {
-    const row = this.frame.locator("tr", { hasText: title });
-
-    if (description) {
-      return row.filter({ hasText: description });
-    }
-
+    let row = this.frame.locator("tr", { hasText: title });
+    if (description) row = row.filter({ hasText: description });
     return row;
+  }
+
+  getPostRow(title: string) {
+    return this.getRowByData(title).first();
+  }
+
+  // ======================
+  // ACTIONS - EDIT
+  // ======================
+  async openEdit(title: string) {
+    const row = this.getPostRow(title);
+
+    await row.waitFor({ state: "visible" });
+
+    await row.click();
+
+    await this.titleInput.waitFor({ state: "visible" });
+
+    await expect(this.saveBtn).toBeVisible();
+  }
+
+  // Click Save
+  async clickSave() {
+    await this.saveBtn.click({ force: true });
+  }
+
+  // Update title
+  async updateTitle(title: string) {
+    await this.titleInput.fill("");
+    await this.titleInput.fill(title);
+  }
+
+  // Clear title (for validation test)
+  async clearTitle() {
+    await this.titleInput.fill("");
+  }
+
+  // Expect updated
+  async expectPostUpdated(title: string) {
+    await expect(this.getPostRow(title)).toBeVisible({ timeout: 15000 });
+  }
+
+  // Unsaved changes warning
+  getUnsavedWarning() {
+    return this.frame.getByText(/unsaved/i);
+  }
+
+  // Save button state
+  async expectSaveEnabled(enabled: boolean) {
+    if (enabled) await expect(this.saveBtn).toBeEnabled({ timeout: 5000 });
+    else await expect(this.saveBtn).toBeDisabled({ timeout: 5000 });
+  }
+
+  async isTitleInvalid() {
+    return await this.titleInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
+  }
+
+  async selectPost(title: string) {
+    const row = this.getPostRow(title);
+
+    await row.waitFor({ state: "visible" });
+
+    const checkbox = row.locator("label");
+
+    await checkbox.click();
+  }
+
+  async selectMultiple(titles: string[]) {
+    for (const t of titles) {
+      await this.selectPost(t);
+    }
+  }
+
+  async clickDelete() {
+    await this.deleteBtn.waitFor({ state: "visible" });
+    await this.deleteBtn.click();
+  }
+
+  async confirmDelete() {
+    await this.confirmDeleteBtn.waitFor({ state: "visible" });
+    await this.confirmDeleteBtn.click();
+  }
+
+  async cancelDelete() {
+    await this.cancelDeleteBtn.click();
+  }
+
+  async resetSelection() {
+    await this.resetBtn.click();
+  }
+
+  async expectPostDeleted(title: string) {
+    await expect(this.getPostRow(title)).toHaveCount(0);
+  }
+
+  async expectSelectedCount(count: number) {
+    if (count === 0) {
+      await expect(this.selectedText).toHaveCount(0);
+    } else {
+      await expect(this.selectedText).toContainText(`${count}`);
+    }
+  }
+
+  getDeleteSuccessToast() {
+    return this.frame.getByText(/successfully deleted/i);
+  }
+
+  async expectNoSelection() {
+    await expect(this.selectedText).toHaveCount(0);
   }
 }

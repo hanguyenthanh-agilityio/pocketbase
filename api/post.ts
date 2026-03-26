@@ -18,10 +18,35 @@ export class PostAPI {
     return { res, body };
   }
 
+  async update(id: string, data: any) {
+    const res = await this.request.patch(`/api/collections/posts/records/${id}`, {
+      headers: this.headers(),
+      data,
+    });
+
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+
+    return { res, body };
+  }
+
   async delete(id: string) {
-    return this.request.delete(`/api/collections/posts/records/${id}`, {
+    const res = await this.request.delete(`/api/collections/posts/records/${id}`, {
       headers: this.headers(),
     });
+
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+
+    return { res, body };
   }
 
   async safeDelete(id: string, retries = 3) {
@@ -43,5 +68,18 @@ export class PostAPI {
     const res = await this.request.get(url, { headers: this.headers() });
     const body = await res.json();
     return body;
+  }
+
+  async getById(id: string) {
+    const res = await this.request.get(`/api/collections/posts/records/${id}`, {
+      headers: this.headers(),
+    });
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+    return { res, body };
   }
 }

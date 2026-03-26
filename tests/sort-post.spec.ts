@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures/fixture";
+import { postsTest as test, expect } from "../fixtures/post";
 import {
   normalize,
   hasDifferentValues,
@@ -15,21 +15,20 @@ test.describe("Sort Records - UI Validation (Optimized)", () => {
   test(
     "TC056 - Verify user can sort posts by title ascending",
     { tag: ["@TC056", "@regression", "@ui", "@post", "@sort"] },
-    async ({ postPage }) => {
+    async ({ createPostPage }) => {
       let titles: string[] = [];
 
       await test.step("Sort by title ASC", async () => {
-        await postPage.sortBy("title", "asc");
-        await postPage.waitForTableLoaded();
+        await createPostPage.sortBy("title", "asc");
+        await createPostPage.waitForTableLoaded();
       });
 
       await test.step("Get titles from table", async () => {
-        titles = normalize(await postPage.getColumnTexts(3));
+        titles = normalize(await createPostPage.getColumnTexts(3));
       });
 
       await test.step("Verify sorting result", async () => {
         expect(hasData(titles)).toBeTruthy();
-
         if (hasDifferentValues(titles)) {
           expect(isSortedAsc(titles)).toBeTruthy();
         }
@@ -40,23 +39,20 @@ test.describe("Sort Records - UI Validation (Optimized)", () => {
   test(
     "TC057 - Verify user can sort posts by title descending",
     { tag: ["@TC057", "@regression", "@ui", "@post", "@sort"] },
-    async ({ postPage }) => {
+    async ({ createPostPage }) => {
       let titles: string[] = [];
 
       await test.step("Sort by title DESC", async () => {
-        await postPage.sortBy("title", "desc");
-        await postPage.waitForTableLoaded();
+        await createPostPage.sortBy("title", "desc");
+        await createPostPage.waitForTableLoaded();
       });
 
       await test.step("Get titles from table", async () => {
-        titles = normalize(await postPage.getColumnTexts(3));
+        titles = normalize(await createPostPage.getColumnTexts(3));
       });
 
       await test.step("Verify sorting result", async () => {
         expect(hasData(titles)).toBeTruthy();
-
-        console.log("DESC Titles:", titles);
-
         if (hasDifferentValues(titles)) {
           expect(isSortedDesc(titles)).toBeTruthy();
         }
@@ -67,23 +63,20 @@ test.describe("Sort Records - UI Validation (Optimized)", () => {
   test(
     "TC060 - Verify user can sort posts by active status ascending",
     { tag: ["@TC060", "@regression", "@ui", "@post", "@sort"] },
-    async ({ postPage }) => {
+    async ({ createPostPage }) => {
       let values: string[] = [];
 
       await test.step("Sort by active ASC", async () => {
-        await postPage.sortBy("active", "asc");
-        await postPage.waitForTableLoaded();
+        await createPostPage.sortBy("active", "asc");
+        await createPostPage.waitForTableLoaded();
       });
 
       await test.step("Get active values from table", async () => {
-        values = normalizeBoolean(await postPage.getColumnTexts(5));
+        values = normalizeBoolean(await createPostPage.getColumnTexts(5));
       });
 
       await test.step("Verify sorting result", async () => {
         expect(hasData(values)).toBeTruthy();
-
-        console.log("ASC Active:", values);
-
         if (hasDifferentValues(values)) {
           expect(isBooleanAsc(values)).toBeTruthy();
         }
@@ -94,23 +87,20 @@ test.describe("Sort Records - UI Validation (Optimized)", () => {
   test(
     "TC061 - Verify user can sort posts by active status descending",
     { tag: ["@TC061", "@regression", "@ui", "@post", "@sort"] },
-    async ({ postPage }) => {
+    async ({ createPostPage }) => {
       let values: string[] = [];
 
       await test.step("Sort by active DESC", async () => {
-        await postPage.sortBy("active", "desc");
-        await postPage.waitForTableLoaded();
+        await createPostPage.sortBy("active", "desc");
+        await createPostPage.waitForTableLoaded();
       });
 
       await test.step("Get active values from table", async () => {
-        values = normalizeBoolean(await postPage.getColumnTexts(5));
+        values = normalizeBoolean(await createPostPage.getColumnTexts(5));
       });
 
       await test.step("Verify sorting result", async () => {
         expect(hasData(values)).toBeTruthy();
-
-        console.log("DESC Active:", values);
-
         if (hasDifferentValues(values)) {
           expect(isBooleanDesc(values)).toBeTruthy();
         }

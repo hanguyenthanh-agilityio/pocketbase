@@ -28,11 +28,11 @@ export class PostSearchPage extends PostPage {
 
   async expectRowVisible(title: string) {
     const row = this.getPostRow(title);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toBeVisible();
   }
 
   async expectNoRecords() {
     const emptyRow = this.frame.locator('tbody tr:has-text("No records")');
-    await expect(emptyRow).toBeVisible({ timeout: 10000 });
+    await expect(emptyRow).toBeVisible();
   }
 }

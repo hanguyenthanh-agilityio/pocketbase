@@ -1,93 +1,184 @@
-# playwright-training
+# 🚀 Playwright Training Plan - Practice 2
 
+**Date:** Mar 17, 2026
 
+---
 
-## Getting started
+## 📌 OVERVIEW
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+This document provides the Playwright Automation Testing training plan.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The goal of this training is to practice **UI Testing** and **API Testing** using Playwright on the demo application:
 
-## Add your files
+👉 https://pocketbase.io/demo/
 
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- **Timeline:** 5 working days
+- **Start date:** Mar 17, 2026
+- **End date:** Mar 23, 2026
 
-```
-cd existing_repo
-git remote add origin https://gitlab.asoft-python.com/ha.nguyenthanh/playwright-training.git
-git branch -M main
-git push -uf origin main
-```
+---
 
-## Integrate with your tools
+## 🎯 TARGETS
 
-* [Set up project integrations](https://gitlab.asoft-python.com/ha.nguyenthanh/playwright-training/-/settings/integrations)
+- Implement end-to-end automation tests using Playwright
+- Combine UI tests with API tests
+- Create test data using API before running UI tests
+- Verify API responses (status code & response data)
+- Automate CRUD operations (Create, Read, Update, Delete)
+- Automate table interactions
+- Validate sorting and searching
+- Write maintainable and scalable test cases
 
-## Collaborate with your team
+---
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## 🧰 PREREQUISITE
 
-## Test and Deploy
+### 📦 Framework
 
-Use the built-in continuous integration in GitLab.
+- Basic knowledge of a JS/TS framework (React, Angular, etc.)
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 💻 Operating System
 
-***
+- Windows 10+, Windows Server 2016+, or WSL
+- macOS 13 Ventura or later
+- Linux: Debian 12, Ubuntu 22.04 / 24.04 (x86-64 & arm64)
 
-# Editing this README
+### 🟢 Node.js
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+- Version: 18 / 20 / 22 (recommended latest LTS)
 
-## Suggestions for a good README
+### 📦 Package Manager
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- npm / yarn / pnpm
 
-## Name
-Choose a self-explaining name for your project.
+### 🧑‍💻 IDE
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- Visual Studio Code
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+> 📝 **Note:** System requirements follow official Playwright documentation.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## 📚 DETAIL PLAN
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### 1. 🎯 PLAYWRIGHT FUNDAMENTALS
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+📖 Documentation: https://playwright.dev/docs/intro
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Topics:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- Playwright introduction
+- Writing first test
+- Selectors
+- Test structure
+- Fixtures
+- Locators
+- Handling forms
+- Handling tables
+- Handling file uploads
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+---
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### 2. 🔌 API TESTING WITH PLAYWRIGHT
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+📖 Documentation: https://playwright.dev/docs/api-testing
 
-## License
-For open source projects, say how it is licensed.
+Topics:
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- `APIRequestContext`
+- API authentication
+- Sending requests (GET / POST / DELETE / PATCH)
+- Verifying status code
+- Verifying response body
+- Using API client patterns (service layer)
+
+📌 Reference:
+
+- Playwright Todo List example
+
+---
+
+## 🧪 PRACTICES (5 DAYS)
+
+### 📍 PRACTICE 2
+
+Test the demo application:
+
+👉 https://pocketbase.io/demo/
+
+---
+
+## 🧩 FEATURES TO COVER
+
+### 🔐 Authentication
+
+- Verify user can login successfully
+
+### 📝 CRUD Operations
+
+- Create a new record
+- Edit a record
+- Delete a record
+
+### 📊 Table Interactions
+
+- Verify sorting by:
+  - Title
+  - Description
+  - Active
+  - Options
+
+### 🔍 Search
+
+- Verify user can search records
+- Verify search with:
+  - Normal text
+  - Uppercase / lowercase
+  - Empty result
+
+---
+
+## 📋 TEST CASES
+
+- Test case list: **Google Sheet / Excel (provided separately)**
+
+---
+
+## 💡 EXPECTED OUTPUT
+
+- Fully working Playwright test suite
+- Clean architecture (Fixtures + Page Object + API layer)
+- Stable tests (no flaky behavior)
+- Reusable utilities and helpers
+- Proper test tagging (`@smoke`, `@regression`, `@api`, `@ui`)
+
+---
+
+## 🏁 FINAL GOAL
+
+By the end of this practice, you should be able to:
+
+✅ Build a complete Playwright automation framework  
+✅ Combine UI + API testing effectively  
+✅ Handle real-world scenarios (async UI, table, search, CRUD)  
+✅ Write clean, maintainable, and scalable tests
+
+---
+
+## ⚙️ INSTALLATION & SETUP
+
+| Purpose                 | Command                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| 📄 Clone                | `git clone git@gitlab.asoft-python.com:ha.nguyenthanh/playwright-training.git` |
+| 📦 Install dependencies | `pnpm install`                                                                 |
+| 🌐 Install browsers     | `npx playwright install`                                                       |
+| ▶️ Run all tests        | `pnpm test`                                                                    |
+| 📄 Run specific file    | `pnpm test tests/create-post.spec.ts`                                          |
+| 🌍 Run chromium only    | `pnpm test --project=chromium`                                                 |
+| 🔌 Run API tests        | `pnpm test --project=api`                                                      |
+| 🏷 Run by tag           | `pnpm test -g "@smoke"`                                                        |
+| 👀 Headed mode          | `pnpm test --headed`                                                           |
+| 🐞 Debug mode           | `pnpm test --debug`                                                            |
+| 🎯 Run specific line    | `pnpm test file.spec.ts:10`                                                    |
+
+---

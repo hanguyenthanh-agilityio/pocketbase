@@ -219,7 +219,13 @@ export class PostPage {
   }
 
   async expectPostDeleted(title: string) {
-    await expect(this.getPostRow(title)).toHaveCount(0, { timeout: 5000 });
+    const row = this.getPostRow(title);
+
+    // Wait table reload
+    await this.waitForTableLoaded();
+
+    // Ensure row is gone
+    await expect(row).toHaveCount(0, { timeout: 10000 });
   }
 
   async resetSelection() {

@@ -1,7 +1,8 @@
 import { Page } from "@playwright/test";
 import { test as base, expect } from "./fixture";
 import { PostPage } from "../pages/post.page";
-import { PostAPI, PostData } from "../api/post";
+import { PostAPI } from "../api/post";
+import { PostData } from "../types/post";
 
 type PostPageWithData = PostPage & { postList: PostData[] };
 
@@ -22,18 +23,25 @@ const setupPostPage = async (
 
   // Create posts
   const postList: PostData[] = [];
+
+  const unique = Date.now();
+
   for (let i = 0; i < count; i++) {
-    const post = await postApi.create({
-      title: `${prefix}_${i}`,
+    const res = await postApi.create({
+      title: `${prefix}_${i}_${unique}`,
       description: `${prefix} description ${i}`,
       active: true,
     });
-    postList.push(post);
+
+    postList.push(res.data);
   }
 
   await postPage.goto();
 
-  const pageWithData = Object.assign(postPage, { postList });
+  const pageWithData: PostPageWithData = Object.assign(postPage, {
+    postList,
+  });
+
   await use(pageWithData);
 
   // Cleanup posts

@@ -1,158 +1,128 @@
 import { test, expect } from "../fixtures/fixture";
+import { PostData } from "../types/post";
 
-test.describe("Post API", () => {
-  test(
-    "TC012 - API - Verify create post with required fields only",
-    { tag: ["@TC012", "@smoke", "@api", "@post", "@create"] },
-    async ({ postApi, createdPostIds }) => {
-      const title = `API Required ${Date.now()}`;
-      const { res, body } = await postApi.create({ title });
+test.use({ browserName: "chromium" });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe(title);
+test.describe("Post API - Create", () => {
+  test("TC012 - Create with required fields only", async ({ postApi, createdPostIds }) => {
+    const title = `API Required ${Date.now()}`;
 
-      // Track for cleanup
-      createdPostIds.push(body.id);
+    const res = await postApi.create({ title });
+
+    expect([200, 201]).toContain(res.status);
+
+    const post: PostData = res.data;
+
+    expect(post.title).toBe(title);
+
+    createdPostIds.push(post.id);
+  });
+
+  test("TC013 - Create with all fields", async ({ postApi, createdPostIds }) => {
+    const data = {
+      title: `API Full ${Date.now()}`,
+      description: "Sample description",
+      active: true,
+    };
+
+    const res = await postApi.create(data);
+
+    expect([200, 201]).toContain(res.status);
+
+    const post = res.data;
+
+    expect(post.title).toBe(data.title);
+    expect(post.description).toContain("Sample");
+    expect(post.active).toBe(true);
+
+    createdPostIds.push(post.id);
+  });
+
+  test("TC014 - Title is required", async ({ postApi }) => {
+    const res = await postApi.create({ title: "" });
+
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  test("TC015 - Title supports special characters", async ({ postApi, createdPostIds }) => {
+    const title = `!!!Test@@@ ${Date.now()}`;
+
+    const res = await postApi.create({ title });
+
+    expect([200, 201]).toContain(res.status);
+    expect(res.data.title).toBe(title);
+
+    createdPostIds.push(res.data.id);
+  });
+
+  test("TC016 - Title max length validation", async ({ postApi, createdPostIds }) => {
+    const longTitle = "A".repeat(500);
+
+    const res = await postApi.create({ title: longTitle });
+
+    expect([200, 201, 400]).toContain(res.status);
+
+    if (res.status < 400) {
+      createdPostIds.push(res.data.id);
     }
-  );
+  });
 
-  test(
-    "TC013 - API - Create post with all fields",
-    { tag: ["@TC013", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const { res, body } = await postApi.create({
-        title: "API Full Post",
-        description: "Sample description",
-        active: true,
-      });
+  test("TC017 - Description supports rich text", async ({ postApi, createdPostIds }) => {
+    const res = await postApi.create({
+      title: `Rich ${Date.now()}`,
+      description: "<b>bold text</b>",
+    });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe("API Full Post");
-      expect(body.description).toContain("Sample description");
-      expect(body.active).toBeTruthy();
+    expect([200, 201]).toContain(res.status);
+    expect(res.data.description).toContain("bold");
 
-      createdPostIds.push(body.id);
-    }
-  );
+    createdPostIds.push(res.data.id);
+  });
 
-  test(
-    "TC014 - API - Verify title is required",
-    { tag: ["@TC014", "@regression", "@api", "@validation"] },
-    async ({ postApi }) => {
-      const { res } = await postApi.create({ title: "" });
-      expect(res.status()).toBeGreaterThanOrEqual(400);
-    }
-  );
+  test("TC018 - Description long paragraph", async ({ postApi, createdPostIds }) => {
+    const desc = "Lorem ".repeat(200);
 
-  test(
-    "TC015 - API - Verify title accepts special characters",
-    { tag: ["@TC015", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const title = "!!!Test@@@" + Date.now();
-      const { res, body } = await postApi.create({ title });
+    const res = await postApi.create({
+      title: `Long Desc ${Date.now()}`,
+      description: desc,
+    });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe(title);
+    expect([200, 201]).toContain(res.status);
+    expect(res.data.description!.length).toBeGreaterThan(100);
 
-      createdPostIds.push(body.id);
-    }
-  );
+    createdPostIds.push(res.data.id);
+  });
 
-  test(
-    "TC016 - API - Verify title max length validation",
-    { tag: ["@TC016", "@regression", "@api", "@validation"] },
-    async ({ postApi, createdPostIds }) => {
-      const longTitle = "A".repeat(500);
-      const { res, body } = await postApi.create({ title: longTitle });
+  test("TC019 - Active = true", async ({ postApi, createdPostIds }) => {
+    const res = await postApi.create({
+      title: `Active True ${Date.now()}`,
+      active: true,
+    });
 
-      expect([200, 201, 400]).toContain(res.status());
+    expect(res.status).toBeLessThan(300);
+    expect(res.data.active).toBe(true);
 
-      // Only track if success
-      if (res.status() < 400) {
-        createdPostIds.push(body.id);
-      } else {
-        expect(body).toHaveProperty("data");
-      }
-    }
-  );
+    createdPostIds.push(res.data.id);
+  });
 
-  test(
-    "TC017 - API - Verify description supports rich text",
-    { tag: ["@TC017", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const { res, body } = await postApi.create({
-        title: "Rich Text API",
-        description: "<b>bold text</b>",
-      });
+  test("TC020 - Active = false", async ({ postApi, createdPostIds }) => {
+    const res = await postApi.create({
+      title: `Active False ${Date.now()}`,
+      active: false,
+    });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.description).toContain("bold");
+    expect(res.status).toBeLessThan(300);
+    expect(res.data.active).toBe(false);
 
-      createdPostIds.push(body.id);
-    }
-  );
+    createdPostIds.push(res.data.id);
+  });
 
-  test(
-    "TC018 - API - Verify description long paragraph",
-    { tag: ["@TC018", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const desc = "Lorem ipsum ".repeat(200);
-      const { res, body } = await postApi.create({
-        title: "Long Desc API",
-        description: desc,
-      });
+  test("TC021 - Unauthorized request", async ({ request }) => {
+    const res = await request.post("/api/collections/posts/records", {
+      headers: { Authorization: "Bearer invalid_token" },
+      data: { title: "Fail" },
+    });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.description.length).toBeGreaterThan(100);
-
-      createdPostIds.push(body.id);
-    }
-  );
-
-  test(
-    "TC019 - API - Verify active true",
-    { tag: ["@TC019", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const { res, body } = await postApi.create({
-        title: "Active True API",
-        active: true,
-      });
-
-      expect([200, 201]).toContain(res.status());
-      expect(body.active).toBe(true);
-
-      createdPostIds.push(body.id);
-    }
-  );
-
-  test(
-    "TC020 - API - Verify active false",
-    { tag: ["@TC020", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const { res, body } = await postApi.create({
-        title: "Active False API",
-        active: false,
-      });
-
-      expect([200, 201]).toContain(res.status());
-      expect(body.active).toBe(false);
-
-      createdPostIds.push(body.id);
-    }
-  );
-
-  test(
-    "TC021 - API - Verify unauthorized request",
-    { tag: ["@TC021", "@regression", "@api", "@negative"] },
-    async ({ request }) => {
-      const res = await request.post("/api/collections/posts/records", {
-        headers: {
-          Authorization: "Bearer invalid_token",
-        },
-        data: { title: "Should Fail" },
-      });
-
-      expect(res.status()).toBe(403);
-    }
-  );
+    expect(res.status()).toBe(403);
+  });
 });

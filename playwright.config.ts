@@ -40,6 +40,15 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts/,
     },
 
+    // API TEST
+    {
+      name: "api",
+      testMatch: /.*api\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+      },
+    },
+
     // AUTH TESTS (LOGIN)
     {
       name: "auth-chromium",
@@ -69,7 +78,7 @@ export default defineConfig({
     // E2E TESTS (POST, FEATURES,...)
     {
       name: "chromium",
-      testIgnore: /.*login\.spec\.ts/,
+      testIgnore: [/.*login\.spec\.ts/, /.*api\.spec\.ts/],
       use: {
         ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
@@ -78,7 +87,7 @@ export default defineConfig({
     },
     {
       name: "firefox",
-      testIgnore: /.*login\.spec\.ts/,
+      testIgnore: [/.*login\.spec\.ts/, /.*api\.spec\.ts/],
       use: {
         ...devices["Desktop Firefox"],
         storageState: "playwright/.auth/user.json",
@@ -87,7 +96,7 @@ export default defineConfig({
     },
     {
       name: "webkit",
-      testIgnore: /.*login\.spec\.ts/,
+      testIgnore: [/.*login\.spec\.ts/, /.*api\.spec\.ts/],
       use: {
         ...devices["Desktop Safari"],
         storageState: "playwright/.auth/user.json",

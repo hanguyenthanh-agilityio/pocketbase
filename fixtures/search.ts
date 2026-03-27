@@ -1,6 +1,6 @@
 import { test as base } from "./fixture";
 import { PostSearchPage } from "../pages/post-search.page";
-import { PostData } from "../api/post";
+import { PostData } from "../types/post";
 
 type PostSearchPageWithData = PostSearchPage & { postList: PostData[] };
 
@@ -20,7 +20,7 @@ export const postsSearchTest = base.extend<{
         description: `search description ${i}`,
         active: true,
       });
-      postList.push(post);
+      postList.push(post.data);
     }
 
     await pageObj.goto();

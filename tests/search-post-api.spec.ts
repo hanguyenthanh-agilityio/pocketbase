@@ -1,10 +1,5 @@
 import { test, expect } from "../fixtures/fixture";
 
-type Post = {
-  id: string;
-  title: string;
-};
-
 test.describe("Post API - Search (Optimized)", () => {
   test(
     "TC065 - API - Search any keyword",
@@ -12,14 +7,12 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi, createdPostIds }) => {
       const title = `SearchTest ${Date.now()}`;
 
-      const { body } = await postApi.create({ title });
-      createdPostIds.push(body.id);
+      const createRes = await postApi.create({ title });
+      createdPostIds.push(createRes.data.id);
 
       const res = await postApi.list(`title~"SearchTest"`);
 
-      const items = res.items as Post[];
-
-      const titles = items.map((i) => i.title);
+      const titles = res.data.map((i) => i.title);
 
       expect(titles).toContain(title);
     }
@@ -31,14 +24,12 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi, createdPostIds }) => {
       const title = `SearchTest ${Date.now()}`;
 
-      const { body } = await postApi.create({ title });
-      createdPostIds.push(body.id);
+      const createRes = await postApi.create({ title });
+      createdPostIds.push(createRes.data.id);
 
       const res = await postApi.list(`title~"${title.toUpperCase()}"`);
 
-      const items = res.items as Post[];
-
-      expect(items.map((i) => i.title)).toContain(title);
+      expect(res.data.map((i) => i.title)).toContain(title);
     }
   );
 
@@ -48,14 +39,12 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi, createdPostIds }) => {
       const title = `SearchTest ${Date.now()}`;
 
-      const { body } = await postApi.create({ title });
-      createdPostIds.push(body.id);
+      const createRes = await postApi.create({ title });
+      createdPostIds.push(createRes.data.id);
 
       const res = await postApi.list(`title~"${title.toLowerCase()}"`);
 
-      const items = res.items as Post[];
-
-      expect(items.map((i) => i.title)).toContain(title);
+      expect(res.data.map((i) => i.title)).toContain(title);
     }
   );
 
@@ -65,14 +54,12 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi, createdPostIds }) => {
       const title = `${Date.now()}`;
 
-      const { body } = await postApi.create({ title });
-      createdPostIds.push(body.id);
+      const createRes = await postApi.create({ title });
+      createdPostIds.push(createRes.data.id);
 
       const res = await postApi.list(`title="${title}"`);
 
-      const items = res.items as Post[];
-
-      expect(items.map((i) => i.title)).toContain(title);
+      expect(res.data.map((i) => i.title)).toContain(title);
     }
   );
 
@@ -82,7 +69,7 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi }) => {
       const res = await postApi.list(`title="randomtext123"`);
 
-      expect(res.items.length).toBe(0);
+      expect(res.data.length).toBe(0);
     }
   );
 
@@ -92,12 +79,12 @@ test.describe("Post API - Search (Optimized)", () => {
     async ({ postApi, createdPostIds }) => {
       const title = `SearchTest ${Date.now()}`;
 
-      const { body } = await postApi.create({ title });
-      createdPostIds.push(body.id);
+      const createRes = await postApi.create({ title });
+      createdPostIds.push(createRes.data.id);
 
       const res = await postApi.list(`title~"SearchTest"`);
 
-      expect(res.items.length).toBeGreaterThan(0);
+      expect(res.data.length).toBeGreaterThan(0);
     }
   );
 });

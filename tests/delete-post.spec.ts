@@ -22,63 +22,67 @@ test.describe("Delete Post - UI Validation (Optimized)", () => {
     }
   );
 
-  test(
-    "TC049 - Verify user can delete multiple posts",
-    { tag: ["@TC049", "@regression", "@ui", "@post", "@delete"] },
-    async ({ createPostPage }) => {
-      const [post1, post2] = createPostPage.postList;
+  test.describe("Multiple delete scenarios", () => {
+    test.use({ postCount: 2 });
 
-      await test.step("Select multiple posts", async () => {
-        await createPostPage.selectMultiple([post1.title, post2.title]);
-      });
+    test(
+      "TC049 - Verify user can delete multiple posts",
+      { tag: ["@TC049", "@regression", "@ui", "@post", "@delete"] },
+      async ({ createPostPage }) => {
+        const [post1, post2] = createPostPage.postList;
 
-      await test.step("Click Delete and confirm", async () => {
-        await createPostPage.clickDelete();
-        await createPostPage.confirmDelete();
-      });
+        await test.step("Select multiple posts", async () => {
+          await createPostPage.selectMultiple([post1.title, post2.title]);
+        });
 
-      await test.step("Verify both posts are removed from UI", async () => {
-        await createPostPage.expectPostDeleted(post1.title);
-        await createPostPage.expectPostDeleted(post2.title);
-      });
-    }
-  );
+        await test.step("Click Delete and confirm", async () => {
+          await createPostPage.clickDelete();
+          await createPostPage.confirmDelete();
+        });
 
-  test(
-    "TC050 - Verify Delete button is visible when a post is selected",
-    { tag: ["@TC050", "@regression", "@ui", "@post", "@delete"] },
-    async ({ createPostPage }) => {
-      const post = createPostPage.postList[0];
+        await test.step("Verify both posts are removed from UI", async () => {
+          await createPostPage.expectPostDeleted(post1.title);
+          await createPostPage.expectPostDeleted(post2.title);
+        });
+      }
+    );
 
-      await test.step("Select the post", async () => {
-        await createPostPage.selectPost(post.title);
-      });
+    test(
+      "TC050 - Verify Delete button is visible when a post is selected",
+      { tag: ["@TC050", "@regression", "@ui", "@post", "@delete"] },
+      async ({ createPostPage }) => {
+        const post = createPostPage.postList[0];
 
-      await test.step("Verify Delete button is visible", async () => {
-        await expect(createPostPage.deleteBtn).toBeVisible();
-      });
-    }
-  );
+        await test.step("Select the post", async () => {
+          await createPostPage.selectPost(post.title);
+        });
 
-  test(
-    "TC051 - Verify Reset selection clears all selected posts",
-    { tag: ["@TC051", "@regression", "@ui", "@post", "@delete"] },
-    async ({ createPostPage }) => {
-      const [post1, post2] = createPostPage.postList;
+        await test.step("Verify Delete button is visible", async () => {
+          await expect(createPostPage.deleteBtn).toBeVisible();
+        });
+      }
+    );
 
-      await test.step("Select multiple posts", async () => {
-        await createPostPage.selectMultiple([post1.title, post2.title]);
-      });
+    test(
+      "TC051 - Verify Reset selection clears all selected posts",
+      { tag: ["@TC051", "@regression", "@ui", "@post", "@delete"] },
+      async ({ createPostPage }) => {
+        const [post1, post2] = createPostPage.postList;
 
-      await test.step("Reset selection", async () => {
-        await createPostPage.resetSelection();
-      });
+        await test.step("Select multiple posts", async () => {
+          await createPostPage.selectMultiple([post1.title, post2.title]);
+        });
 
-      await test.step("Verify no posts selected", async () => {
-        await expect(createPostPage.deleteBtn).not.toBeVisible();
-      });
-    }
-  );
+        await test.step("Reset selection", async () => {
+          await createPostPage.resetSelection();
+        });
+
+        await test.step("Verify no posts selected", async () => {
+          await expect(createPostPage.deleteBtn).not.toBeVisible();
+        });
+      }
+    );
+  });
 
   test(
     "TC054 - Verify cancelling delete keeps the post",

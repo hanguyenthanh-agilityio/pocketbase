@@ -1,59 +1,70 @@
 import { test, expect } from "../fixtures/fixture";
+import { PostData } from "../types/post";
 
-test.describe("Post API - Create", () => {
+test.describe("Post API - Delete", () => {
   test(
-    "TC012 - API - Verify create post with required fields only",
-    { tag: ["@TC012", "@smoke", "@api", "@post", "@create"] },
-    async ({ postApi, createdPostIds }) => {
-      const title = `API Required ${Date.now()}`;
-      const { res, body } = await postApi.create({ title });
-
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe(title);
-
-      createdPostIds.push(body.id);
-    }
-  );
-
-  test(
-    "TC013 - API - Create post with all fields",
-    { tag: ["@TC013", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const { res, body } = await postApi.create({
-        title: "API Full Post",
-        description: "Sample description",
-        active: true,
+    "TC060 - Verify user can delete a post successfully",
+    { tag: ["@TC060", "@smoke", "@api", "@post", "@delete"] },
+    async ({ postApi }) => {
+      const createRes = await postApi.create({
+        title: `Delete ${Date.now()}`,
       });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe("API Full Post");
-      expect(body.description).toContain("Sample description");
-      expect(body.active).toBe(true);
+      const created: PostData = createRes.data;
 
-      createdPostIds.push(body.id);
+      const res = await postApi.delete(created.id);
+
+      expect(res.status).toBeLessThan(300);
+
+      // verify deleted
+      const getRes = await postApi.getById(created.id);
+      expect(getRes.status).toBeGreaterThanOrEqual(400);
     }
   );
 
   test(
-    "TC014 - API - Verify title is required",
-    { tag: ["@TC014", "@regression", "@api", "@validation"] },
+    "TC061 - Verify deleting non-existing post returns error",
+    { tag: ["@TC061", "@regression", "@api", "@negative"] },
     async ({ postApi }) => {
-      const { res } = await postApi.create({ title: "" });
-      expect(res.status()).toBeGreaterThanOrEqual(400);
+      const fakeId = "non_existing_id";
+
+      const res = await postApi.delete(fakeId);
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
     }
   );
 
   test(
-    "TC015 - API - Verify title accepts special characters",
-    { tag: ["@TC015", "@regression", "@api", "@post"] },
-    async ({ postApi, createdPostIds }) => {
-      const title = "!!!Test@@@" + Date.now();
-      const { res, body } = await postApi.create({ title });
+    "TC062 - Verify unauthorized user cannot delete post",
+    { tag: ["@TC062", "@regression", "@api", "@negative"] },
+    async ({ request }) => {
+      const res = await request.delete("/api/collections/posts/records/some-id", {
+        headers: {
+          Authorization: "Bearer invalid_token",
+        },
+      });
 
-      expect([200, 201]).toContain(res.status());
-      expect(body.title).toBe(title);
+      expect(res.status()).toBe(403);
+    }
+  );
 
-      createdPostIds.push(body.id);
+  test(
+    "TC063 - Verify deleting the same post twice",
+    { tag: ["@TC063", "@regression", "@api", "@edge"] },
+    async ({ postApi }) => {
+      const createRes = await postApi.create({
+        title: `Double Delete ${Date.now()}`,
+      });
+
+      const created = createRes.data;
+
+      // First delete
+      const res1 = await postApi.delete(created.id);
+      expect(res1.status).toBeLessThan(300);
+
+      // Second delete → should fail
+      const res2 = await postApi.delete(created.id);
+      expect(res2.status).toBeGreaterThanOrEqual(400);
     }
   );
 });

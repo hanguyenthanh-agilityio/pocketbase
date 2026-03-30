@@ -83,7 +83,6 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
       },
-      dependencies: ["setup"],
     },
     {
       name: "firefox",
@@ -92,7 +91,6 @@ export default defineConfig({
         ...devices["Desktop Firefox"],
         storageState: "playwright/.auth/user.json",
       },
-      dependencies: ["setup"],
     },
     {
       name: "webkit",
@@ -101,7 +99,6 @@ export default defineConfig({
         ...devices["Desktop Safari"],
         storageState: "playwright/.auth/user.json",
       },
-      dependencies: ["setup"],
     },
   ],
 });

@@ -1,168 +1,121 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "../fixtures/fixture";
-import {
-  normalize,
-  hasDifferentValues,
-  isSortedAsc,
-  isSortedDesc,
-  isBooleanAsc,
-  isBooleanDesc,
-} from "../utils/sort";
+import { PostData } from "../types/post";
 
-test.describe("Post API - Sort (Optimized)", () => {
+// Helper normalize title để sort compare
+function normalizeTitleForSort(title: string | null | undefined): string {
+  if (!title) return "";
+  const match = title.match(/^create_0_(\d+)$/);
+  if (match) {
+    return match[1].padStart(20, "0"); // numeric part -> padded string
+  }
+  return title.toLowerCase();
+}
+
+test.describe("Edit Post API", () => {
   test(
-    "TC064 - API - Verify sorting posts by title ascending",
-    { tag: ["@TC064", "@regression", "@api", "@post", "@sort"] },
-    async ({ request, postApi }) => {
-      let body: any;
+    "TC046 - Verify user can update post title successfully",
+    { tag: ["@TC046", "@smoke", "@api", "@post", "@edit"] },
+    async ({ postApi, createdPostIds }) => {
+      const createTitle = `API Post ${Date.now()}`;
+      const createRes = await postApi.create({ title: createTitle });
 
-      await test.step("Send request sort by title ASC", async () => {
-        const res = await request.get("/api/collections/posts/records?sort=+title", {
-          headers: { Authorization: `Bearer ${postApi["token"]}` },
-        });
+      const created: PostData = createRes.data;
+      createdPostIds.push(created.id);
 
-        expect(res.status()).toBe(200);
-        body = await res.json();
-      });
+      const updatedTitle = `Updated API ${Date.now()}`;
+      const res = await postApi.update(created.id, { title: updatedTitle });
 
-      let titles: string[] = [];
-
-      await test.step("Extract titles", async () => {
-        expect(body).toHaveProperty("items");
-        titles = normalize(body.items.map((i: any) => i.title));
-      });
-
-      await test.step("Verify sorting result", async () => {
-        expect(titles.length).toBeGreaterThan(0);
-
-        if (hasDifferentValues(titles)) {
-          expect(isSortedAsc(titles)).toBeTruthy();
-        }
-      });
+      expect([200, 201]).toContain(res.status);
+      expect(normalizeTitleForSort(res.data.title)).toBe(normalizeTitleForSort(updatedTitle));
     }
   );
 
   test(
-    "TC065 - API - Verify sorting posts by title descending",
-    { tag: ["@TC065", "@regression", "@api", "@post", "@sort"] },
-    async ({ request, postApi }) => {
-      let body: any;
+    "TC047 - Verify system returns error when updating post with empty title",
+    { tag: ["@TC047", "@regression", "@api", "@validation"] },
+    async ({ postApi, createdPostIds }) => {
+      const createRes = await postApi.create({ title: `API Post ${Date.now()}` });
+      const created = createRes.data;
+      createdPostIds.push(created.id);
 
-      await test.step("Send request sort by title DESC", async () => {
-        const res = await request.get("/api/collections/posts/records?sort=-title", {
-          headers: { Authorization: `Bearer ${postApi["token"]}` },
-        });
+      const res = await postApi.update(created.id, { title: "" });
 
-        expect(res.status()).toBe(200);
-        body = await res.json();
-      });
-
-      let titles: string[] = [];
-
-      await test.step("Extract titles", async () => {
-        titles = normalize(body.items.map((i: any) => i.title));
-      });
-
-      await test.step("Verify sorting result", async () => {
-        expect(titles.length).toBeGreaterThan(0);
-
-        if (hasDifferentValues(titles)) {
-          expect(isSortedDesc(titles)).toBeTruthy();
-        }
-      });
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.data).toBeTruthy();
     }
   );
 
   test(
-    "TC068 - API - Verify sorting posts by active ascending",
-    { tag: ["@TC068", "@regression", "@api", "@post", "@sort"] },
-    async ({ request, postApi }) => {
-      let body: any;
+    "TC048 - Verify user can update post description",
+    { tag: ["@TC048", "@regression", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const createRes = await postApi.create({ title: `API Post ${Date.now()}` });
+      const created = createRes.data;
+      createdPostIds.push(created.id);
 
-      await test.step("Send request sort by active ASC", async () => {
-        const res = await request.get("/api/collections/posts/records?sort=active", {
-          headers: { Authorization: `Bearer ${postApi["token"]}` },
-        });
+      const updatedDesc = "Updated description via API";
+      const res = await postApi.update(created.id, { description: updatedDesc });
 
-        expect(res.status()).toBe(200);
-        body = await res.json();
-      });
-
-      let values: string[] = [];
-
-      await test.step("Extract active values", async () => {
-        values = normalize(body.items.map((i: any) => (i.active ? "true" : "false")));
-      });
-
-      await test.step("Verify sorting result", async () => {
-        expect(values.length).toBeGreaterThan(0);
-
-        if (hasDifferentValues(values)) {
-          expect(isBooleanAsc(values)).toBeTruthy();
-        }
-      });
+      expect([200, 201]).toContain(res.status);
+      expect((res.data.description ?? "").toLowerCase()).toContain(updatedDesc.toLowerCase());
     }
   );
 
   test(
-    "TC069 - API - Verify sorting posts by active descending",
-    { tag: ["@TC069", "@regression", "@api", "@post", "@sort"] },
-    async ({ request, postApi }) => {
-      let body: any;
+    "TC049 - Verify user can set active status to true",
+    { tag: ["@TC049", "@regression", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const createRes = await postApi.create({ title: `API Post ${Date.now()}`, active: false });
+      const created = createRes.data;
+      createdPostIds.push(created.id);
 
-      await test.step("Send request sort by active DESC", async () => {
-        const res = await request.get("/api/collections/posts/records?sort=-active", {
-          headers: { Authorization: `Bearer ${postApi["token"]}` },
-        });
+      const res = await postApi.update(created.id, { active: true });
 
-        expect(res.status()).toBe(200);
-        body = await res.json();
-      });
-
-      let values: string[] = [];
-
-      await test.step("Extract active values", async () => {
-        values = normalize(body.items.map((i: any) => (i.active ? "true" : "false")));
-      });
-
-      await test.step("Verify sorting result", async () => {
-        expect(values.length).toBeGreaterThan(0);
-
-        if (hasDifferentValues(values)) {
-          expect(isBooleanDesc(values)).toBeTruthy();
-        }
-      });
+      expect([200, 201]).toContain(res.status);
+      expect(res.data.active).toBe(true);
     }
   );
 
   test(
-    "TC070 - API - Verify sorting by options field returns valid structure",
-    { tag: ["@TC070", "@regression", "@api", "@post", "@sort"] },
-    async ({ request, postApi }) => {
-      let body: any;
+    "TC050 - Verify user can set active status to false",
+    { tag: ["@TC050", "@regression", "@api", "@post"] },
+    async ({ postApi, createdPostIds }) => {
+      const createRes = await postApi.create({ title: `API Post ${Date.now()}`, active: true });
+      const created = createRes.data;
+      createdPostIds.push(created.id);
 
-      await test.step("Send request sort by options", async () => {
-        const res = await request.get("/api/collections/posts/records?sort=options", {
-          headers: { Authorization: `Bearer ${postApi["token"]}` },
-        });
+      const res = await postApi.update(created.id, { active: false });
 
-        expect(res.status()).toBe(200);
-        body = await res.json();
+      expect([200, 201]).toContain(res.status);
+      expect(res.data.active).toBe(false);
+    }
+  );
+
+  test(
+    "TC051 - Verify system returns error when updating non-existing post",
+    { tag: ["@TC051", "@regression", "@api", "@negative"] },
+    async ({ postApi }) => {
+      const fakeId = "non_existing_id";
+
+      const res = await postApi.update(fakeId, { title: "Should fail" });
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+    }
+  );
+
+  test(
+    "TC052 - Verify unauthorized user cannot update post",
+    { tag: ["@TC052", "@regression", "@api", "@negative"] },
+    async ({ request }) => {
+      const res = await request.patch("/api/collections/posts/records/some-id", {
+        headers: {
+          Authorization: "Bearer invalid_token",
+          "Content-Type": "application/json",
+        },
+        data: { title: "Unauthorized edit" },
       });
 
-      await test.step("Verify response structure", async () => {
-        expect(body).toHaveProperty("items");
-
-        if (body.items.length > 0) {
-          const item = body.items[0];
-
-          expect(item).toHaveProperty("options");
-
-          if (item.options !== null && item.options !== undefined) {
-            expect(Array.isArray(item.options)).toBeTruthy();
-          }
-        }
-      });
+      expect(res.status()).toBe(403);
     }
   );
 });

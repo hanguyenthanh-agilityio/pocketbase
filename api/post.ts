@@ -14,6 +14,10 @@ export class PostAPI {
     };
   }
 
+  public getHeaders(): Record<string, string> {
+    return this.headers();
+  }
+
   private async parse<T>(res: APIResponse): Promise<ApiResponse<T>> {
     let data: T;
 

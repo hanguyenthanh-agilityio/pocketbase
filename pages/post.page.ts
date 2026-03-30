@@ -244,34 +244,34 @@ export class PostPage {
       .filter({ hasText: new RegExp(column, "i") })
       .first();
 
-    await header.click(); // ASC
-    await header.click(); // DESC
-    await header.click(); // NONE
+    const getState = async () => {
+      const className = await header.getAttribute("class");
+      if (className?.includes("sort-asc")) return "asc";
+      if (className?.includes("sort-desc")) return "desc";
+      return "none";
+    };
 
-    if (direction === "asc") {
-      await header.click(); // ASC
-    } else {
-      await header.click(); // ASC
-      await header.click(); // DESC
+    let state = await getState();
+
+    while (state !== direction) {
+      await header.click();
+      state = await getState();
     }
   }
 
   async getColumnTexts(index: number) {
     const rows = this.frame.locator("tbody tr");
-
     const count = await rows.count();
-    const result: string[] = [];
+
+    const values: string[] = [];
 
     for (let i = 0; i < count; i++) {
       const cell = rows.nth(i).locator(`td:nth-child(${index})`);
-
-      if (await cell.count()) {
-        const text = (await cell.textContent())?.trim();
-        if (text) result.push(text);
-      }
+      const text = await cell.innerText();
+      values.push(text.trim());
     }
 
-    return result;
+    return values;
   }
 
   async expectSortedAsc(values: string[]) {
@@ -285,6 +285,10 @@ export class PostPage {
   }
 
   async waitForTableLoaded() {
-    await this.frame.locator("tbody tr").first().waitFor({ state: "visible", timeout: 10000 });
+    const rows = this.frame.locator("tbody tr");
+
+    await rows.first().waitFor({ state: "visible" });
+
+    await this.page.waitForLoadState("networkidle");
   }
 }

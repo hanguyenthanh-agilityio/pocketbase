@@ -1,119 +1,111 @@
-import { postsTest as test, expect } from "../fixtures/post";
+import { sortPostsTest as test } from "../fixtures/sort";
+import { expect } from "@playwright/test";
 import { normalize, normalizeBoolean } from "../utils/sort";
 
-test.describe("Sort Records - UI Validation (Optimized)", () => {
-  test("TC056 - Sort title ASC", async ({ createPostPage }) => {
-    const before = normalize(await createPostPage.getColumnTexts(3));
+test.describe("Sort Records - UI Validation", () => {
+  test(
+    "TC056 - Verify user can sort posts by title ascending",
+    { tag: ["@TC056", "@regression", "@ui", "@post", "@sort"] },
+    async ({ sortPostPage }) => {
+      const titlesToSort = sortPostPage.postList.map((p) => p.title);
+      await sortPostPage.sortBy("title", "asc");
 
-    await createPostPage.sortBy("title", "asc");
+      const allTitles = normalize(await sortPostPage.getColumnTexts(3));
 
-    const after = normalize(await createPostPage.getColumnTexts(3));
+      const filtered = allTitles.filter((t) => titlesToSort.includes(t));
 
-    expect(after).not.toEqual(before);
-
-    // stable check
-    await createPostPage.sortBy("title", "asc");
-    const after2 = normalize(await createPostPage.getColumnTexts(3));
-
-    expect(after2).toEqual(after);
-  });
+      expect(filtered).toEqual([...titlesToSort].sort((a, b) => a.localeCompare(b)));
+    }
+  );
 
   test(
     "TC057 - Verify user can sort posts by title descending",
     { tag: ["@TC057", "@regression", "@ui", "@post", "@sort"] },
-    async ({ createPostPage }) => {
-      let before: string[] = [];
-      let after: string[] = [];
+    async ({ sortPostPage }) => {
+      const titlesToSort = sortPostPage.postList.map((p) => p.title);
 
-      await test.step("Get initial titles", async () => {
-        before = normalize(await createPostPage.getColumnTexts(3));
-      });
+      await sortPostPage.sortBy("title", "desc");
 
-      await test.step("Sort DESC", async () => {
-        await createPostPage.sortBy("title", "desc");
-      });
+      const allTitles = normalize(await sortPostPage.getColumnTexts(3));
 
-      await test.step("Get titles after sort", async () => {
-        after = normalize(await createPostPage.getColumnTexts(3));
-        console.log("DESC titles:", after);
-      });
+      const filtered = allTitles.filter((t) => titlesToSort.includes(t));
 
-      await test.step("Verify sorting behavior", async () => {
-        expect(after.length).toBeGreaterThan(0);
-
-        expect(after).not.toEqual(before);
-
-        await createPostPage.sortBy("title", "desc");
-        const after2 = normalize(await createPostPage.getColumnTexts(3));
-
-        expect(after2).toEqual(after);
-      });
+      expect(filtered).toEqual([...titlesToSort].sort((a, b) => b.localeCompare(a)));
     }
   );
 
   test(
-    "TC060 - Verify user can sort posts by active status ascending",
+    "TC058 - Verify user can sort posts by description ascending",
+    { tag: ["@TC058", "@regression", "@ui", "@post", "@sort"] },
+    async ({ sortPostPage }) => {
+      const descToSort = normalize(sortPostPage.postList.map((p) => p.description ?? ""));
+
+      await sortPostPage.sortBy("description", "asc");
+
+      const allDesc = normalize(await sortPostPage.getColumnTexts(4));
+
+      // Remove duplicates
+      const filtered = Array.from(new Set(allDesc)).filter((d) => descToSort.includes(d));
+
+      expect(filtered).toEqual([...descToSort].sort((a, b) => a.localeCompare(b)));
+    }
+  );
+
+  test(
+    "TC059 - Verify user can sort posts by description descending",
+    { tag: ["@TC059", "@regression", "@ui", "@post", "@sort"] },
+    async ({ sortPostPage }) => {
+      const descToSort = sortPostPage.postList
+        .map((p) => p.description ?? "")
+        .filter(Boolean)
+        .map((d) => d.toLowerCase().trim());
+
+      await sortPostPage.sortBy("description", "desc");
+
+      const allDesc = normalize(await sortPostPage.getColumnTexts(4));
+
+      const filtered = Array.from(new Set(allDesc)).filter((d) => descToSort.includes(d));
+
+      expect(filtered).toEqual([...descToSort].sort((a, b) => b.localeCompare(a)));
+    }
+  );
+
+  test(
+    "TC060 - Verify user can sort posts by active ascending",
     { tag: ["@TC060", "@regression", "@ui", "@post", "@sort"] },
-    async ({ createPostPage }) => {
-      let before: string[] = [];
-      let after: string[] = [];
+    async ({ sortPostPage }) => {
+      const activesToSort = sortPostPage.postList.map((p) => p.active);
 
-      await test.step("Get initial active values", async () => {
-        before = normalizeBoolean(await createPostPage.getColumnTexts(5));
-      });
+      await sortPostPage.sortBy("active", "asc");
 
-      await test.step("Sort ASC", async () => {
-        await createPostPage.sortBy("active", "asc");
-      });
+      const allActives = normalizeBoolean(await sortPostPage.getColumnTexts(5));
 
-      await test.step("Get values after sort", async () => {
-        after = normalizeBoolean(await createPostPage.getColumnTexts(5));
-        console.log("ASC active:", after);
-      });
+      const filtered = allActives.slice(0, activesToSort.length);
 
-      await test.step("Verify sorting behavior", async () => {
-        expect(after.length).toBeGreaterThan(0);
-
-        expect(after).not.toEqual(before);
-
-        await createPostPage.sortBy("active", "asc");
-        const after2 = normalizeBoolean(await createPostPage.getColumnTexts(5));
-
-        expect(after2).toEqual(after);
-      });
+      // ASC
+      expect(filtered).toEqual([...activesToSort].sort().map((v) => (v ? "1" : "0")));
     }
   );
 
   test(
-    "TC061 - Verify user can sort posts by active status descending",
+    "TC061 - Verify user can sort posts by active descending",
     { tag: ["@TC061", "@regression", "@ui", "@post", "@sort"] },
-    async ({ createPostPage }) => {
-      let before: string[] = [];
-      let after: string[] = [];
+    async ({ sortPostPage }) => {
+      const activesToSort = sortPostPage.postList.map((p) => p.active);
 
-      await test.step("Get initial active values", async () => {
-        before = normalizeBoolean(await createPostPage.getColumnTexts(5));
-      });
+      await sortPostPage.sortBy("active", "desc");
 
-      await test.step("Sort DESC", async () => {
-        await createPostPage.sortBy("active", "desc");
-      });
+      const allActives = normalizeBoolean(await sortPostPage.getColumnTexts(5));
 
-      await test.step("Get values after sort", async () => {
-        after = normalizeBoolean(await createPostPage.getColumnTexts(5));
-        console.log("DESC active:", after);
-      });
+      const filtered = allActives.slice(0, activesToSort.length);
 
-      await test.step("Verify sorting behavior", async () => {
-        expect(after.length).toBeGreaterThan(0);
-
-        expect(after).not.toEqual(before);
-
-        await createPostPage.sortBy("active", "desc");
-        const after2 = normalizeBoolean(await createPostPage.getColumnTexts(5));
-
-        expect(after2).toEqual(after);
-      });
+      // DESC
+      expect(filtered).toEqual(
+        [...activesToSort]
+          .sort()
+          .reverse()
+          .map((v) => (v ? "1" : "0"))
+      );
     }
   );
 });

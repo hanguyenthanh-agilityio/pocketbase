@@ -291,4 +291,20 @@ export class PostPage {
 
     await this.page.waitForLoadState("networkidle");
   }
+
+  async waitForPostsWithPrefix(prefix: string, colIndex = 3, count = 4, timeout = 15000) {
+    await this.frame.locator("tbody tr").first().waitFor({ state: "visible" });
+
+    const rows = this.frame.locator("tbody tr");
+    const rowCount = await rows.count();
+
+    for (let i = 0; i < rowCount; i++) {
+      await rows.nth(i).locator(`td:nth-child(${colIndex})`).innerText();
+    }
+
+    const cells = this.frame.locator(`tbody tr td:nth-child(${colIndex})`, {
+      hasText: prefix,
+    });
+    await expect(cells).toHaveCount(count, { timeout });
+  }
 }

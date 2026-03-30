@@ -1,7 +1,6 @@
 import { test, expect } from "../fixtures/fixture";
 import { PostData } from "../types/post";
 
-// Helper normalize title để sort compare
 function normalizeTitleForSort(title: string | null | undefined): string {
   if (!title) return "";
   const match = title.match(/^create_0_(\d+)$/);
